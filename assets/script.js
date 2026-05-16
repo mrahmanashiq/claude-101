@@ -130,13 +130,17 @@
 
   function pageContext() {
     const path = location.pathname.replace(/\\/g, "/");
-    const m = path.match(/\/courses\/([^/]+)\/([^/]+)\.html$/);
-    if (m) {
-      const courseSlug = m[1];
-      const file = m[2];
+    // Match /courses/<course>/<file> with optional .html (Cloudflare strips it)
+    const fileMatch = path.match(/\/courses\/([^/]+)\/([^/]+?)(?:\.html)?$/);
+    if (fileMatch) {
+      const courseSlug = fileMatch[1];
+      const file = fileMatch[2];
       if (file === "index") return { kind: "course", courseSlug };
       return { kind: "chapter", courseSlug, chapterSlug: file, chapterId: courseSlug + "/" + file };
     }
+    // Match /courses/<course>/ or /courses/<course> (clean-URL course index)
+    const courseMatch = path.match(/\/courses\/([^/]+)\/?$/);
+    if (courseMatch) return { kind: "course", courseSlug: courseMatch[1] };
     return { kind: "home" };
   }
 
