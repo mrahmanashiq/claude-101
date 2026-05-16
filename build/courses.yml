@@ -72,7 +72,7 @@ strings:
     promo_free: free forever
     home_h1: Learn Claude
     home_lede_template: "A practical, open guide to Anthropic's Claude — from your first prompt to production agents. {courses} courses · {chapters} chapters."
-    footer: "Original writing. Free to read, share, and remix. Built with markdown and a Python build script."
+    footer: '🤖 Crafted by <a href="https://mrahmanashiq.vercel.app/" target="_blank" rel="noopener">Ashiq</a> — Claude expert by day, prompt whisperer by night. ☕ Powered by curiosity, caffeine, and aggressive amounts of markdown.'
     toggle_lang: বাংলায় পড়ুন
   bn:
     site_name: লার্ন ক্লড
@@ -95,5 +95,5 @@ strings:
     promo_free: চিরকাল ফ্রি
     home_h1: লার্ন ক্লড
     home_lede_template: "Anthropic-এর Claude-এর জন্য একটি প্রায়োগিক, ওপেন গাইড — আপনার প্রথম prompt থেকে production agent পর্যন্ত। {courses}টি কোর্স · {chapters}টি অধ্যায়।"
-    footer: "মূল লেখা। পড়তে, শেয়ার করতে ও remix করতে স্বাধীন। Markdown ও Python build script দিয়ে তৈরি।"
+    footer: '🤖 তৈরি করেছেন <a href="https://mrahmanashiq.vercel.app/" target="_blank" rel="noopener">Ashiq</a> — দিনে Claude expert, রাতে prompt whisperer। ☕ কৌতূহল, caffeine ও অত্যধিক markdown দিয়ে চালিত।'
     toggle_lang: Read in English

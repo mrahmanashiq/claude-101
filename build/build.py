@@ -378,7 +378,7 @@ def build_home(courses: list[dict], chapter_counts: dict[str, int],
         "total_courses": str(total_courses),
         "total_chapters": str(total_chapters),
         "chapters_complete_label": escape(strings["chapters_complete"]),
-        "footer": escape(strings["footer"]),
+        "footer": strings["footer"],  # raw HTML allowed (curated, not user input)
         "course_cards": render_course_cards(
             [c for c in courses if chapter_counts.get(c["slug"], 0) > 0],
             chapter_counts, lang, strings, base_path_for_home(lang),
