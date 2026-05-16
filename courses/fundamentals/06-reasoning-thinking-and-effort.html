@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reasoning, Thinking, and Effort — Fundamentals</title>
+  <link rel="stylesheet" href="../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">Open Guide · Fundamentals</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">Learn<strong>Claude</strong></span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="index.html">Fundamentals</a>
+      <span class="sep">›</span>
+      <span class="current">Reasoning, Thinking, and Effort</span>
+    </nav>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">Course</span>
+          <a href="index.html">Fundamentals</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> completed</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-what-is-claude.html"><span class="ch-num">01</span><span class="ch-title">What is Claude?</span></a></li>
+            <li class=""><a href="02-models-opus-sonnet-haiku.html"><span class="ch-num">02</span><span class="ch-title">Models: Opus, Sonnet, Haiku</span></a></li>
+            <li class=""><a href="03-how-to-talk-to-claude.html"><span class="ch-num">03</span><span class="ch-title">How to Talk to Claude</span></a></li>
+            <li class=""><a href="04-context-windows-explained.html"><span class="ch-num">04</span><span class="ch-title">Context Windows Explained</span></a></li>
+            <li class=""><a href="05-system-prompts-vs-user-prompts.html"><span class="ch-num">05</span><span class="ch-title">System Prompts vs User Prompts</span></a></li>
+            <li class="active"><a href="06-reasoning-thinking-and-effort.html" aria-current="page"><span class="ch-num">06</span><span class="ch-title">Reasoning, Thinking, and Effort</span></a></li>
+            <li class=""><a href="07-common-pitfalls-and-how-to-avoid-them.html"><span class="ch-num">07</span><span class="ch-title">Common Pitfalls and How to Avoid Them</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Reasoning, Thinking, and Effort</h1>
+<p>Claude can answer in two modes, very roughly. It can produce a fast, direct answer — token after token, no scratchpad. Or it can <em>think first</em> — work through the problem internally, then commit to a final answer. The second mode is slower and more expensive, but on hard problems it makes a real difference.</p>
+<h2 id="just-answer-vs-think-first">"Just answer" vs "think first"</h2>
+<p>The default is direct answering. The model reads your prompt and starts producing the response on the next token. For most tasks this is fine and is what you want — anything else would be wasteful.</p>
+<p>But for harder tasks — multi-step math, tricky code reasoning, weighing trade-offs across constraints — a direct answer often shows holes. The model didn't have room to check itself. Encouraging it to think first fixes a lot of these holes.</p>
+<p>There are two ways to do this.</p>
+<h2 id="way-one-extended-thinking">Way one: extended thinking</h2>
+<p>Anthropic exposes a built-in feature on recent Claude models called <strong>extended thinking</strong>. When you turn it on (a parameter on the API call), Claude generates a private "thinking" block before its final answer. You can budget how many tokens that block is allowed.</p>
+<p>In code, it looks roughly like:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">,</span>
+    <span class="n">max_tokens</span><span class="o">=</span><span class="mi">4096</span><span class="p">,</span>
+    <span class="n">thinking</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="s2">&quot;budget_tokens&quot;</span><span class="p">:</span> <span class="mi">2048</span><span class="p">},</span>
+    <span class="n">messages</span><span class="o">=</span><span class="p">[{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;...&quot;</span><span class="p">}],</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<p>The thinking content is returned in a separate block of the response. You generally don't show it to end users, but you can log it for debugging.</p>
+<h2 id="way-two-explicit-scratchpad">Way two: explicit scratchpad</h2>
+<p>You can also ask the model to think in the open, by including instructions in your prompt:</p>
+<div class="codehilite"><pre><span></span><code>Before giving your final answer, work through the problem inside
+&lt;thinking&gt;&lt;/thinking&gt; tags. Then put the final answer inside
+&lt;answer&gt;&lt;/answer&gt; tags.
+</code></pre></div>
+
+<p>This is older and lower-tech than extended thinking, but it works on every model and lets you inspect (or hide) the scratchpad explicitly.</p>
+<h2 id="when-thinking-helps-and-when-it-doesnt">When thinking helps — and when it doesn't</h2>
+<p>Thinking pays off when:</p>
+<ul>
+<li>The problem has multiple steps and the answer depends on getting each step right.</li>
+<li>There's a verifiable answer (math, code, logic) that the model can self-check against.</li>
+<li>The task involves comparing options or weighing trade-offs.</li>
+</ul>
+<p>Thinking doesn't help much when:</p>
+<ul>
+<li>The task is mostly creative (writing a poem, brainstorming names).</li>
+<li>The output is short and direct (classification, single-fact extraction).</li>
+<li>You're already at the right tier and the model gets it right consistently.</li>
+</ul>
+<p>The rule of thumb: if you're seeing the model make confident-but-wrong answers on hard tasks, try thinking before you upgrade the model tier. Often that's enough.</p>
+<h2 id="effort-levels">Effort levels</h2>
+<p>Some surfaces (Claude Code in particular) expose a higher-level "effort" knob — low, medium, high — that bundles thinking, retries, and tool use. Same intuition: dial up effort when the task is hard and time is cheap; dial it down when the task is simple and latency matters.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Don't enable thinking by default everywhere. It costs tokens and adds latency. Enable it where you've measured a quality lift, not where you hope there is one.</p>
+</div>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">Mark as complete</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="05-system-prompts-vs-user-prompts.html"><span class="dir">← Previous</span><span class="title">System Prompts vs User Prompts</span></a>
+          <a class="chapter-nav-next" href="07-common-pitfalls-and-how-to-avoid-them.html"><span class="dir">Next →</span><span class="title">Common Pitfalls and How to Avoid Them</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">On this page</div>
+        <ul>
+            <li><a href="#just-answer-vs-think-first">&quot;Just answer&quot; vs &quot;think first&quot;</a></li>
+            <li><a href="#way-one-extended-thinking">Way one: extended thinking</a></li>
+            <li><a href="#way-two-explicit-scratchpad">Way two: explicit scratchpad</a></li>
+            <li><a href="#when-thinking-helps-and-when-it-doesn-t">When thinking helps — and when it doesn&#x27;t</a></li>
+            <li><a href="#effort-levels">Effort levels</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../assets/script.js"></script>
+</body>
+</html>

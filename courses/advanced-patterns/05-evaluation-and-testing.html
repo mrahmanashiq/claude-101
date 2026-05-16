@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Evaluation and Testing — Advanced Patterns</title>
+  <link rel="stylesheet" href="../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">Open Guide · Advanced Patterns</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">Learn Claude</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="index.html">Advanced Patterns</a>
+      <span class="sep">›</span>
+      <span class="current">Evaluation and Testing</span>
+    </nav>
+    <a class="lang-toggle" href="../../bn/courses/advanced-patterns/05-evaluation-and-testing.html" data-action="set-lang">বাংলায় পড়ুন</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">Course</span>
+          <a href="index.html">Advanced Patterns</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> completed</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-agent-loops.html"><span class="ch-num">01</span><span class="ch-title">Agent Loops</span></a></li>
+            <li class=""><a href="02-multi-step-workflows.html"><span class="ch-num">02</span><span class="ch-title">Multi-step Workflows</span></a></li>
+            <li class=""><a href="03-subagent-orchestration.html"><span class="ch-num">03</span><span class="ch-title">Subagent Orchestration</span></a></li>
+            <li class=""><a href="04-building-mcp-servers.html"><span class="ch-num">04</span><span class="ch-title">Building MCP Servers</span></a></li>
+            <li class="active"><a href="05-evaluation-and-testing.html" aria-current="page"><span class="ch-num">05</span><span class="ch-title">Evaluation and Testing</span></a></li>
+            <li class=""><a href="06-production-readiness.html"><span class="ch-num">06</span><span class="ch-title">Production Readiness</span></a></li>
+            <li class=""><a href="07-cost-optimization.html"><span class="ch-num">07</span><span class="ch-title">Cost Optimization</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Evaluation and Testing</h1>
+<p>Without evals, every change to your LLM system is guesswork. With evals, you can iterate fast and ship confidently. The gap between these two states is enormous, and most projects never close it because they think evals are exotic. They aren't. You can have a useful eval suite in an afternoon.</p>
+<h2 id="what-an-eval-actually-is">What an eval actually is</h2>
+<p>An eval is a set of test cases for your LLM-using code. Each case has:</p>
+<ul>
+<li><strong>An input</strong> — the prompt or request you'd give the system in production.</li>
+<li><strong>An expected outcome</strong> — what "good" looks like. Sometimes exact, sometimes a rubric, sometimes "doesn't include X."</li>
+<li><strong>A way to score</strong> the actual output against the expectation.</li>
+</ul>
+<p>It's basically unit testing for things that aren't deterministic. The scoring is what's different.</p>
+<h2 id="scoring-strategies-in-order-of-effort">Scoring strategies, in order of effort</h2>
+<p><strong>Exact match.</strong> When you can. For classifiers, extractors, structured outputs — if the expected output is <code>"billing"</code> and the model says <code>"billing"</code>, that's a pass. Cheapest, sharpest signal. Use this whenever possible.</p>
+<p><strong>Substring / regex match.</strong> When the output has a known marker. "The reply must contain the order ID." "The reply must not contain the user's email." Coarse but useful.</p>
+<p><strong>Structural checks.</strong> For JSON outputs: did it parse? Did it have the required fields? Are field values within constraints? Easy code to write; catches most generation regressions.</p>
+<p><strong>Rubric scoring with another LLM.</strong> When the right answer is fuzzy. Hand the input, the actual output, and a rubric to a second Claude call: "rate this 1–5 on these dimensions, and explain." Slower and noisier, but lets you eval things like "is this reply polite" or "does this code follow our style."</p>
+<p><strong>Human review.</strong> The gold standard, the most expensive. Reserve for the high-stakes 10% of cases or for periodic spot-checks.</p>
+<p>You'll mix all five. Most well-run evals are 70% structural / exact match and 30% rubric, with humans sampling occasionally.</p>
+<h2 id="building-your-first-eval">Building your first eval</h2>
+<p>Start small. Twenty cases is enough to ship. Fifty is enough to feel confident. A hundred is a lot.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">cases</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="s2">&quot;I want a refund for order 4382&quot;</span><span class="p">,</span> <span class="s2">&quot;expect&quot;</span><span class="p">:</span> <span class="s2">&quot;billing&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="s2">&quot;How do I export my data?&quot;</span><span class="p">,</span> <span class="s2">&quot;expect&quot;</span><span class="p">:</span> <span class="s2">&quot;general&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="s2">&quot;My invoice says $99 but I only see $89 in my plan&quot;</span><span class="p">,</span> <span class="s2">&quot;expect&quot;</span><span class="p">:</span> <span class="s2">&quot;billing&quot;</span><span class="p">},</span>
+    <span class="c1"># ... 17 more ...</span>
+<span class="p">]</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">run_eval</span><span class="p">(</span><span class="n">case</span><span class="p">):</span>
+    <span class="n">actual</span> <span class="o">=</span> <span class="n">classify_intent</span><span class="p">(</span><span class="n">case</span><span class="p">[</span><span class="s2">&quot;input&quot;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="n">case</span><span class="p">[</span><span class="s2">&quot;input&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;expected&quot;</span><span class="p">:</span> <span class="n">case</span><span class="p">[</span><span class="s2">&quot;expect&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;actual&quot;</span><span class="p">:</span> <span class="n">actual</span><span class="p">,</span>
+        <span class="s2">&quot;passed&quot;</span><span class="p">:</span> <span class="n">actual</span> <span class="o">==</span> <span class="n">case</span><span class="p">[</span><span class="s2">&quot;expect&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">run_eval</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cases</span><span class="p">]</span>
+<span class="n">pass_rate</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s2">&quot;passed&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Pass rate: </span><span class="si">{</span><span class="n">pass_rate</span><span class="si">:</span><span class="s2">.0%</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="p">[</span><span class="s2">&quot;passed&quot;</span><span class="p">]:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FAIL: </span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">]</span><span class="si">!r}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;actual&#39;</span><span class="p">]</span><span class="si">!r}</span><span class="s2"> (expected </span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;expected&#39;</span><span class="p">]</span><span class="si">!r}</span><span class="s2">)&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>That's a real eval. It would tell you, today, whether your classifier regressed since last week. Most projects never write this.</p>
+<h2 id="where-the-cases-come-from">Where the cases come from</h2>
+<p>Best source: real production data. Sample failed sessions, edge cases, customer complaints. Anonymize and add to the suite. After a few months you'll have an eval set that reflects your actual users, not just what you imagined.</p>
+<p>Worst source: cases you make up that all look easy. Models pass them and you ship confidently into a brick wall.</p>
+<h2 id="running-on-every-change">Running on every change</h2>
+<p>The whole point of evals is to run them often. Wire them into:</p>
+<ul>
+<li><strong>A pre-merge check</strong> — run the suite when someone touches the prompt or model code, block merging if the pass rate dropped meaningfully.</li>
+<li><strong>A nightly job</strong> — drift detection. The same prompt may behave differently on a new model version.</li>
+<li><strong>A one-line CLI</strong> — <code>make eval</code>. You should be able to invoke it on demand without thinking.</li>
+</ul>
+<p>The fastest projects iterate by running their evals dozens of times a day. The slowest don't have any and "test by feel."</p>
+<h2 id="beware-leaderboard-chasing">Beware leaderboard chasing</h2>
+<p>Pass rate is a number; chasing it can lead you astray. Two failure modes:</p>
+<ul>
+<li><strong>Overfitting to the eval.</strong> If you tune the prompt only against your 50 cases, you'll do well on them and badly on the next 50 you encounter. Rotate cases in periodically. Hold out a fresh set you don't tune against.</li>
+<li><strong>Easy wins masking hard losses.</strong> Your pass rate went from 92% to 94% — but the 6% it still fails are all the high-value cases. Look at <em>which</em> cases fail, not just <em>how many</em>.</li>
+</ul>
+<h2 id="beyond-passfail">Beyond pass/fail</h2>
+<p>Once you have a basic suite, layer in:</p>
+<ul>
+<li><strong>Cost per case.</strong> Track tokens. A new prompt that passes the same cases at half the cost is a real win, even if pass rate is flat.</li>
+<li><strong>Latency.</strong> Mean and P95.</li>
+<li><strong>Failure clustering.</strong> Group failures by category. "Half my failures are when the user's question is in Spanish" is a much more actionable insight than "pass rate is 87%."</li>
+</ul>
+<p>A well-instrumented eval suite tells you not just whether the system works, but where and how it doesn't. That's what lets you steer.</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">Mark as complete</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="04-building-mcp-servers.html"><span class="dir">← Previous</span><span class="title">Building MCP Servers</span></a>
+          <a class="chapter-nav-next" href="06-production-readiness.html"><span class="dir">Next →</span><span class="title">Production Readiness</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">On this page</div>
+        <ul>
+            <li><a href="#what-an-eval-actually-is">What an eval actually is</a></li>
+            <li><a href="#scoring-strategies-in-order-of-effort">Scoring strategies, in order of effort</a></li>
+            <li><a href="#building-your-first-eval">Building your first eval</a></li>
+            <li><a href="#where-the-cases-come-from">Where the cases come from</a></li>
+            <li><a href="#running-on-every-change">Running on every change</a></li>
+            <li><a href="#beware-leaderboard-chasing">Beware leaderboard chasing</a></li>
+            <li><a href="#beyond-pass-fail">Beyond pass/fail</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../assets/script.js"></script>
+</body>
+</html>

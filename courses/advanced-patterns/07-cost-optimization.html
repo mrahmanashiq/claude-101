@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cost Optimization — Advanced Patterns</title>
+  <link rel="stylesheet" href="../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">Open Guide · Advanced Patterns</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">Learn Claude</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="index.html">Advanced Patterns</a>
+      <span class="sep">›</span>
+      <span class="current">Cost Optimization</span>
+    </nav>
+    <a class="lang-toggle" href="../../bn/courses/advanced-patterns/07-cost-optimization.html" data-action="set-lang">বাংলায় পড়ুন</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">Course</span>
+          <a href="index.html">Advanced Patterns</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> completed</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-agent-loops.html"><span class="ch-num">01</span><span class="ch-title">Agent Loops</span></a></li>
+            <li class=""><a href="02-multi-step-workflows.html"><span class="ch-num">02</span><span class="ch-title">Multi-step Workflows</span></a></li>
+            <li class=""><a href="03-subagent-orchestration.html"><span class="ch-num">03</span><span class="ch-title">Subagent Orchestration</span></a></li>
+            <li class=""><a href="04-building-mcp-servers.html"><span class="ch-num">04</span><span class="ch-title">Building MCP Servers</span></a></li>
+            <li class=""><a href="05-evaluation-and-testing.html"><span class="ch-num">05</span><span class="ch-title">Evaluation and Testing</span></a></li>
+            <li class=""><a href="06-production-readiness.html"><span class="ch-num">06</span><span class="ch-title">Production Readiness</span></a></li>
+            <li class="active"><a href="07-cost-optimization.html" aria-current="page"><span class="ch-num">07</span><span class="ch-title">Cost Optimization</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Cost Optimization</h1>
+<p>Cost is the silent killer of AI features. A demo that costs $0.05 per call sounds cheap, until you multiply by a million users and realize the feature is losing money on every interaction. Most cost problems aren't from raw model pricing — they're from sloppy usage patterns that compound.</p>
+<p>Here's the playbook for getting costs down without sacrificing quality.</p>
+<h2 id="know-where-your-money-goes">Know where your money goes</h2>
+<p>You can't optimize what you don't measure. Track at minimum:</p>
+<ul>
+<li><strong>Cost per call</strong> broken down by feature and model.</li>
+<li><strong>Cost per user per day.</strong></li>
+<li><strong>Cost per output</strong> in business terms — per support ticket resolved, per code review, per onboarding completed.</li>
+</ul>
+<p>If you don't have these numbers, the rest of this chapter is theoretical. Get measurement in first, then optimize.</p>
+<h2 id="pick-the-smallest-model-that-works">Pick the smallest model that works</h2>
+<p>Re-run your evals on every tier you haven't ruled out. Often a Haiku does 90% of what a Sonnet does on classification, extraction, and short generation. If pass rate stays acceptable, the cost drop is huge — usually 5–10×.</p>
+<p>Don't assume bigger model = better outcomes. Measure.</p>
+<h2 id="cache-aggressively">Cache aggressively</h2>
+<p>The single highest-impact lever, covered in its own API chapter. To recap the production discipline:</p>
+<ul>
+<li>Stable prefixes (system prompts, tool definitions, reference docs) marked as cacheable.</li>
+<li>Per-request data placed <em>after</em> cached content, never interleaved.</li>
+<li>Cache hit rate monitored — target &gt;70% in production.</li>
+<li>Long-lived (1-hour) cache tier enabled for sustained workloads.</li>
+</ul>
+<p>A cached prefix charges ~10% of full input rate. For most features, that's the difference between profit and loss.</p>
+<h2 id="tighten-max_tokens">Tighten max_tokens</h2>
+<p><code>max_tokens</code> is the cap, not the target. But it's often set too high "just in case," and Claude happily generates up to it. Look at your actual output token distribution. If 99% of responses are under 300 tokens, you don't need <code>max_tokens=2048</code>.</p>
+<p>Pair this with prompts that ask for brevity. "Reply in 2-3 sentences" routinely cuts output cost by 30%+ with no quality loss.</p>
+<h2 id="drop-temperature-for-repeatable-tasks">Drop temperature for repeatable tasks</h2>
+<p>For classifiers, extractors, anything where you want consistency: <code>temperature=0</code>. You get more cache-friendly behavior (similar inputs → similar outputs → better caching) and you eliminate variability that you're sometimes paying retry costs to handle.</p>
+<h2 id="compress-your-history">Compress your history</h2>
+<p>Long conversations are expensive in two ways: more input tokens per call, and worse model focus. Periodically compress:</p>
+<ul>
+<li>Summarize older turns into a short paragraph.</li>
+<li>Drop tool-call/tool-result pairs once the relevant info is in subsequent turns.</li>
+<li>Restart the conversation with a clean system prompt + recent context when it's getting long.</li>
+</ul>
+<p>For agent loops in particular: at every K iterations, ask the model to summarize "what we've learned and what's left." Replace the long history with that summary. The agent will lose some fine-grained memory but stay much cheaper.</p>
+<h2 id="use-streaming-to-cap-costs">Use streaming to cap costs</h2>
+<p>Streaming lets you watch the response come in. If the model starts going off the rails — generating something wrong, repeating itself, exceeding a planned length — you can abort partway. The tokens you didn't generate, you didn't pay for.</p>
+<p>For interactive tools, streaming with smart cancellation can cut effective output cost noticeably.</p>
+<h2 id="batch-when-latency-doesnt-matter">Batch when latency doesn't matter</h2>
+<p>For high-volume, non-real-time workloads — analytics, content moderation pipelines, eval runs — use the Batch API. ~50% discount, same quality. Anything you'd otherwise run with a giant <code>asyncio.gather</code> is a Batch candidate.</p>
+<h2 id="cheaper-tools-cheaper-outcomes">Cheaper tools, cheaper outcomes</h2>
+<p>In tool-use loops, the tool <em>call</em> itself is cheap, but the <em>result</em> gets read into the next turn. A tool that returns a 50KB blob is now part of your prompt forever (until you compress). Two implications:</p>
+<ul>
+<li><strong>Tools should return the minimum data the model needs.</strong> Not "the whole table" — "the three rows that matched." Not "the entire HTML page" — "the relevant section."</li>
+<li><strong>Servers should support filtering and pagination.</strong> Let the model ask for what it actually needs.</li>
+</ul>
+<p>This is one of the biggest hidden cost sources in agent systems.</p>
+<h2 id="re-prompt-rarely">Re-prompt rarely</h2>
+<p>A common cost trap: every UI tweak re-triggers a full inference. Look at your call sites — are you re-prompting when nothing semantically changed? Cache results on the client. Debounce. Don't re-call on every keystroke if you don't have to.</p>
+<h2 id="right-size-the-loop">Right-size the loop</h2>
+<p>For agent loops, iteration count drives cost linearly. If your agent regularly needs 20 iterations to finish a task, look at why:</p>
+<ul>
+<li>Are tools returning enough info?</li>
+<li>Is the task too big for one agent? (Decompose with subagents.)</li>
+<li>Is the model picking the wrong tool repeatedly? (Tighten descriptions.)</li>
+<li>Is <code>max_iters</code> too generous, masking a real bug?</li>
+</ul>
+<p>Tightening the loop pays off twice — fewer calls, and faster responses.</p>
+<h2 id="the-eval-connection">The eval connection</h2>
+<p>Every cost optimization risks quality. Run your eval suite before and after each change. If quality holds and cost drops, ship. If quality drops too, you went too far.</p>
+<h2 id="a-reality-check">A reality check</h2>
+<p>The most cost-effective Claude features have, in this order:</p>
+<ol>
+<li>Picked the right model tier (not the most expensive one).</li>
+<li>Cached every stable prefix.</li>
+<li>Trimmed output length.</li>
+<li>Used batch / async where appropriate.</li>
+<li>Stayed structurally simple — no unnecessary tools, no unnecessary subagents, no unnecessary iteration.</li>
+</ol>
+<p>Skipping the boring optimizations to "go agentic" first is how features get expensive without getting better. Do the boring stuff. Then layer in the fancy stuff where it earns its keep.</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">Mark as complete</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="06-production-readiness.html"><span class="dir">← Previous</span><span class="title">Production Readiness</span></a>
+          <span class="chapter-nav-next placeholder"></span>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">On this page</div>
+        <ul>
+            <li><a href="#know-where-your-money-goes">Know where your money goes</a></li>
+            <li><a href="#pick-the-smallest-model-that-works">Pick the smallest model that works</a></li>
+            <li><a href="#cache-aggressively">Cache aggressively</a></li>
+            <li><a href="#tighten-max-tokens">Tighten max_tokens</a></li>
+            <li><a href="#drop-temperature-for-repeatable-tasks">Drop temperature for repeatable tasks</a></li>
+            <li><a href="#compress-your-history">Compress your history</a></li>
+            <li><a href="#use-streaming-to-cap-costs">Use streaming to cap costs</a></li>
+            <li><a href="#batch-when-latency-doesn-t-matter">Batch when latency doesn&#x27;t matter</a></li>
+            <li><a href="#cheaper-tools-cheaper-outcomes">Cheaper tools, cheaper outcomes</a></li>
+            <li><a href="#re-prompt-rarely">Re-prompt rarely</a></li>
+            <li><a href="#right-size-the-loop">Right-size the loop</a></li>
+            <li><a href="#the-eval-connection">The eval connection</a></li>
+            <li><a href="#a-reality-check">A reality check</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../assets/script.js"></script>
+</body>
+</html>

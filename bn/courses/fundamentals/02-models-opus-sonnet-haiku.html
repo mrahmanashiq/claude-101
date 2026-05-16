@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Models: Opus, Sonnet, Haiku — মৌলিক বিষয়</title>
+  <link rel="stylesheet" href="../../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">ওপেন গাইড · মৌলিক বিষয়</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">লার্ন ক্লড</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../../index.html">হোম</a>
+      <span class="sep">›</span>
+      <a href="index.html">মৌলিক বিষয়</a>
+      <span class="sep">›</span>
+      <span class="current">Models: Opus, Sonnet, Haiku</span>
+    </nav>
+    <a class="lang-toggle" href="../../../courses/fundamentals/02-models-opus-sonnet-haiku.html" data-action="set-lang">Read in English</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">কোর্স</span>
+          <a href="index.html">মৌলিক বিষয়</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> সম্পন্ন</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-what-is-claude.html"><span class="ch-num">01</span><span class="ch-title">Claude আসলে কী?</span></a></li>
+            <li class="active"><a href="02-models-opus-sonnet-haiku.html" aria-current="page"><span class="ch-num">02</span><span class="ch-title">Models: Opus, Sonnet, Haiku</span></a></li>
+            <li class=""><a href="03-how-to-talk-to-claude.html"><span class="ch-num">03</span><span class="ch-title">কীভাবে Claude-এর সাথে কথা বলবেন</span></a></li>
+            <li class=""><a href="04-context-windows.html"><span class="ch-num">04</span><span class="ch-title">Context Window-এর ব্যাখ্যা</span></a></li>
+            <li class=""><a href="05-system-prompts-vs-user-prompts.html"><span class="ch-num">05</span><span class="ch-title">System Prompt বনাম User Prompt</span></a></li>
+            <li class=""><a href="06-reasoning-and-thinking.html"><span class="ch-num">06</span><span class="ch-title">Reasoning, Thinking ও Effort</span></a></li>
+            <li class=""><a href="07-common-pitfalls.html"><span class="ch-num">07</span><span class="ch-title">সাধারণ ভুল ও যেভাবে এড়াবেন</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Models: Opus, Sonnet, Haiku</h1>
+<p>Claude একটাই model না — এটা একটা পরিবার। ঠিক model বেছে নেওয়া হলো আপনার সবচেয়ে বড় leverage-এর সিদ্ধান্ত। ভুল tier ব্যবহার করলে হয় টাকা পুড়িয়ে এমন problem solve করবেন যেটার দরকার ছিল না, অথবা এমন problem-এ quality wall-এ আটকাবেন যেটার দরকার ছিল।</p>
+<h2 id="tier">তিনটা tier</h2>
+<p>Anthropic তিনটা model size ship করে:</p>
+<ul>
+<li><strong>Haiku</strong> — সবচেয়ে ছোট ও দ্রুত। সবচেয়ে কম cost, সবচেয়ে কম latency। Classification, extraction, ছোট summary, simple tool-calling loop ও high-throughput backend কাজে ভালো।</li>
+<li><strong>Sonnet</strong> — মাঝের tier। Quality আর cost-এর মাঝে balance। বেশিরভাগ product surface-এর default workhorse — chat assistant, code review, content generation, agentic workflow যেখানে শক্ত reasoning দরকার কিন্তু সবচেয়ে গভীর না।</li>
+<li><strong>Opus</strong> — সবচেয়ে capable। কঠিন reasoning, জটিল code, multi-step planning, এবং যেসব কাজে small quality difference অনেক বেশি matter করে — সেগুলোর জন্য সেরা। তিনটার মধ্যে সবচেয়ে slow ও সবচেয়ে expensive।</li>
+</ul>
+<p>Haiku ও Opus-এর per-token price gap সাধারণত 10–20× — তাই reflexively Opus-এর দিকে হাত বাড়াবেন না। যে প্রশ্নটা করবেন: <em>marginal quality কি marginal cost-এর সমান value দিচ্ছে?</em></p>
+<h2 id="rule-of-thumb">একটা rule of thumb</h2>
+<p>Sonnet দিয়ে শুরু করুন। বেশিরভাগ প্রশ্নের সঠিক উত্তর সেটাই। যদি scale-এ simple কাজ করছেন এবং কম latency বা cost দরকার — Haiku-তে নামুন। Opus-এ যান শুধু তখনই যখন Sonnet-এ একটা concrete failure দেখতে পান যেটা Opus fix করছে — অনুমানের উপর না।</p>
+<p>Agentic কাজের জন্য (Claude Code, custom agent loop) Sonnet ও Opus practical choice। Haiku সাধারণত দীর্ঘ multi-tool workflow-এ track হারিয়ে ফেলে।</p>
+<h2 id="version-id">Version ও ID</h2>
+<p>প্রতিটা tier-এর versioned release আছে — Sonnet 4.5, Sonnet 4.6, Opus 4.7, এভাবে। Dot-এর পরের number iteration, "minor" version না; quality লক্ষণীয়ভাবে jump করতে পারে এদের মধ্যে। API call করার সময় <code>claude-sonnet-4-6</code> বা <code>claude-opus-4-7</code>-এর মতো একটা model ID string পাঠান। Production-এ specific version-এ pin করুন; SDK-এর "latest" alias ব্যবহার করলে নতুন model ship হলেই আপনার behavior বদলে যাবে।</p>
+<h2 id="practical-choose">Practical-ভাবে কীভাবে choose করবেন</h2>
+<p>তিনটা প্রশ্ন:</p>
+<ol>
+<li><strong>এই model-কে সবচেয়ে কঠিন কোন একক কাজ করতে হবে?</strong> Average-এর জন্য না, hardest task-এর জন্য pick করুন। Average সহজ। 10% hard tail-এ গিয়ে আপনি আটকান।</li>
+<li><strong>প্রতিটা call-এর cost কত, আর প্রতি user-এ কতবার করেন?</strong> Multiply করুন। যদি cheap per call এবং rare per user, তাহলে অনেক room আছে। Frequent হলে tier matter করে।</li>
+<li><strong>Critical path-এ latency কি গুরুত্বপূর্ণ?</strong> Spinner দেখে অপেক্ষা করা একজন user-এর চাহিদা nightly batch job-এর থেকে সম্পূর্ণ আলাদা।</li>
+</ol>
+<p>সন্দেহ হলে দুটোই evaluate করুন। আপনার আসল 30–50টা prompt প্রতিটা tier-এ চালান, output score করুন, compare করুন। Hunch বেশি ভুল হয় eval-এর চেয়ে।</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">সম্পন্ন হিসেবে চিহ্নিত করুন</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="01-what-is-claude.html"><span class="dir">← পূর্ববর্তী</span><span class="title">Claude আসলে কী?</span></a>
+          <a class="chapter-nav-next" href="03-how-to-talk-to-claude.html"><span class="dir">পরবর্তী →</span><span class="title">কীভাবে Claude-এর সাথে কথা বলবেন</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">এই পেজে</div>
+        <ul>
+            <li><a href="#তিনটা-tier">তিনটা tier</a></li>
+            <li><a href="#একটা-rule-of-thumb">একটা rule of thumb</a></li>
+            <li><a href="#version-ও-id">Version ও ID</a></li>
+            <li><a href="#practical-ভাবে-কীভাবে-choose-করবেন">Practical-ভাবে কীভাবে choose করবেন</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../../assets/script.js"></script>
+</body>
+</html>

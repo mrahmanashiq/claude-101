@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messages API-এর Basic — Claude API ও SDK</title>
+  <link rel="stylesheet" href="../../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">ওপেন গাইড · Claude API ও SDK</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">লার্ন ক্লড</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../../index.html">হোম</a>
+      <span class="sep">›</span>
+      <a href="index.html">Claude API ও SDK</a>
+      <span class="sep">›</span>
+      <span class="current">Messages API-এর Basic</span>
+    </nav>
+    <a class="lang-toggle" href="../../../courses/claude-api/02-messages-api-basics.html" data-action="set-lang">Read in English</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">কোর্স</span>
+          <a href="index.html">Claude API ও SDK</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> সম্পন্ন</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-getting-started.html"><span class="ch-num">01</span><span class="ch-title">API দিয়ে শুরু</span></a></li>
+            <li class="active"><a href="02-messages-api-basics.html" aria-current="page"><span class="ch-num">02</span><span class="ch-title">Messages API-এর Basic</span></a></li>
+            <li class=""><a href="03-tool-use.html"><span class="ch-num">03</span><span class="ch-title">Tool Use</span></a></li>
+            <li class=""><a href="04-streaming.html"><span class="ch-num">04</span><span class="ch-title">Streaming Response</span></a></li>
+            <li class=""><a href="05-prompt-caching.html"><span class="ch-num">05</span><span class="ch-title">Prompt Caching</span></a></li>
+            <li class=""><a href="06-extended-thinking.html"><span class="ch-num">06</span><span class="ch-title">Extended Thinking</span></a></li>
+            <li class=""><a href="07-files-pdfs-vision.html"><span class="ch-num">07</span><span class="ch-title">File, PDF ও Vision</span></a></li>
+            <li class=""><a href="08-batch-and-async.html"><span class="ch-num">08</span><span class="ch-title">Batch ও Async</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Messages API-এর Basic</h1>
+<p>Messages API হলো Claude API-এর হৃদয়। প্রায় সব কিছু — single-shot prompt, multi-turn chat, tool use, vision, batch — <code>client.messages.create(...)</code>-এর মধ্য দিয়ে চলে। এর shape বুঝলে বাকি — parameter।</p>
+<h2 id="request">Request</h2>
+<p>Minimum field:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">,</span>
+    <span class="n">max_tokens</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
+    <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;Hello&quot;</span><span class="p">}</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<p>Optional কিন্তু common:</p>
+<ul>
+<li><strong><code>system</code></strong> — system prompt-এর জন্য একটা string (বা typed block-এর list)।</li>
+<li><strong><code>temperature</code></strong> — float, 0.0 থেকে 1.0। Lower = more deterministic।</li>
+<li><strong><code>top_p</code></strong> — float, alternative sampling control। সাধারণত এটা ছুঁবেন না।</li>
+<li><strong><code>stop_sequences</code></strong> — string-এর list; model কোনোটা generate করলে থেমে যায়।</li>
+<li><strong><code>tools</code></strong> — tool definition-এর list (পরের chapter)।</li>
+<li><strong><code>stream</code></strong> — bool; token generate হওয়ার সাথে সাথে stream (নিজের chapter ও)।</li>
+</ul>
+<h2 id="messages-list">Messages list</h2>
+<p><code>messages</code> এ পর্যন্তর conversation। প্রতিটা item-এর একটা <code>role</code> ও একটা <code>content</code>।</p>
+<p><code>role</code> হয় <code>"user"</code> বা <code>"assistant"</code>। এখানে তৃতীয় কোনো role নেই — system prompt নিজের field। Message alternate করতে হবে: user, assistant, user, assistant, এভাবে। প্রথম message <code>user</code> থেকে হতে হবে। একটা request-এ পরপর দুটো user message থাকতে পারে না (client-side merge করতে হবে)।</p>
+<p><code>content</code> হতে পারে একটা string <em>অথবা</em> typed block-এর একটা list। String form shorthand:</p>
+<div class="codehilite"><pre><span></span><code><span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;2+2 কত?&quot;</span><span class="p">}</span>
+</code></pre></div>
+
+<p>Block form-এ equivalent:</p>
+<div class="codehilite"><pre><span></span><code><span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;2+2 কত?&quot;</span><span class="p">}</span>
+<span class="p">]}</span>
+</code></pre></div>
+
+<p>Plain text-এর বাইরে যা কিছু — image, PDF, tool result — block form লাগে।</p>
+<h2 id="response">Response</h2>
+<div class="codehilite"><pre><span></span><code><span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</code></pre></div>
+
+<p>যা ফেরত পাবেন:</p>
+<ul>
+<li><strong><code>resp.content</code></strong> — content block-এর list। Simple text reply-এর জন্য, <code>type: "text"</code> ও একটা <code>text</code> field সহ একটা block।</li>
+<li><strong><code>resp.stop_reason</code></strong> — model কেন থামলো। Common value: <code>"end_turn"</code> (normal completion), <code>"max_tokens"</code> (limit hit), <code>"tool_use"</code> (model একটা tool call করতে চায়), <code>"stop_sequence"</code> (আপনার একটা stop string match হয়েছে)।</li>
+<li><strong><code>resp.usage</code></strong> — token count। <code>input_tokens</code>, <code>output_tokens</code>, এবং (caching-এর সময়) <code>cache_creation_input_tokens</code> ও <code>cache_read_input_tokens</code>।</li>
+<li><strong><code>resp.id</code></strong>, <strong><code>resp.model</code></strong>, <strong><code>resp.role</code></strong> — metadata।</li>
+</ul>
+<p>একটা robust client response "done" ধরে নেওয়ার বদলে <code>stop_reason</code> পড়ে। বিশেষ করে <code>max_tokens</code> একটা common silent truncation source — আপনি long answer চান, <code>max_tokens=512</code> set করেন, এবং response মাঝপথে cut হয়। সবসময় check করুন।</p>
+<h2 id="multi-turn">Multi-turn</h2>
+<p>Conversation চালাতে — প্রতিটা turn <code>messages</code> list-এ append করে resend করুন:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">history</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;ফ্রান্সের রাজধানী কী?&quot;</span><span class="p">},</span>
+<span class="p">]</span>
+
+<span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">,</span>
+                              <span class="n">max_tokens</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">messages</span><span class="o">=</span><span class="n">history</span><span class="p">)</span>
+<span class="n">history</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;assistant&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="p">})</span>
+
+<span class="n">history</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;আর জার্মানির?&quot;</span><span class="p">})</span>
+<span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">,</span>
+                              <span class="n">max_tokens</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">messages</span><span class="o">=</span><span class="n">history</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Chat এভাবে build হয় — history নিজেই maintain করেন, এবং call-এর মাঝে Claude-এর কোনো memory নেই।</p>
+<h2 id="token-economics">Token economics, দ্রুত</h2>
+<p>দুটো rule of thumb:</p>
+<ul>
+<li>একটা token মোটামুটি 4 character English। একটা short paragraph ~80 token; একটা typical page ~500–800।</li>
+<li>Input token output-এর চেয়ে cheaper, কখনো 3× বা তার বেশি। Long input / short output উল্টোটার চেয়ে cheaper।</li>
+</ul>
+<p>Expensive response পেতে থাকলে output-এ দেখুন। হয় tighter <code>max_tokens</code> cap set করুন, না হয় Claude-কে আরও concise হতে বলুন।</p>
+<h2 id="_1">এতটুকু দিয়ে কী বানাতে পারেন</h2>
+<p>সত্যিই — অনেক। Real product-এ "AI feature" কাজের একটা surprising পরিমাণ হলো clever-ভাবে Messages API ব্যবহার, ভালোভাবে craft করা system prompt-এর সাথে। Plain Messages থেকে value squeeze করার আগে tool use ও agent-এর জন্য reach করবেন না।</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">সম্পন্ন হিসেবে চিহ্নিত করুন</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="01-getting-started.html"><span class="dir">← পূর্ববর্তী</span><span class="title">API দিয়ে শুরু</span></a>
+          <a class="chapter-nav-next" href="03-tool-use.html"><span class="dir">পরবর্তী →</span><span class="title">Tool Use</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">এই পেজে</div>
+        <ul>
+            <li><a href="#request">Request</a></li>
+            <li><a href="#messages-list">Messages list</a></li>
+            <li><a href="#response">Response</a></li>
+            <li><a href="#multi-turn">Multi-turn</a></li>
+            <li><a href="#token-economics-দ্রুত">Token economics, দ্রুত</a></li>
+            <li><a href="#এতটুকু-দিয়ে-কী-বানাতে-পারেন">এতটুকু দিয়ে কী বানাতে পারেন</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../../assets/script.js"></script>
+</body>
+</html>

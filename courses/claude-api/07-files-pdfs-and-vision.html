@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Files, PDFs, and Vision — Claude API &amp; SDK</title>
+  <link rel="stylesheet" href="../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">Open Guide · Claude API &amp; SDK</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">Learn<strong>Claude</strong></span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="index.html">Claude API &amp; SDK</a>
+      <span class="sep">›</span>
+      <span class="current">Files, PDFs, and Vision</span>
+    </nav>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">Course</span>
+          <a href="index.html">Claude API &amp; SDK</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> completed</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-getting-started-with-the-api.html"><span class="ch-num">01</span><span class="ch-title">Getting Started with the API</span></a></li>
+            <li class=""><a href="02-messages-api-basics.html"><span class="ch-num">02</span><span class="ch-title">Messages API Basics</span></a></li>
+            <li class=""><a href="03-tool-use.html"><span class="ch-num">03</span><span class="ch-title">Tool Use</span></a></li>
+            <li class=""><a href="04-streaming-responses.html"><span class="ch-num">04</span><span class="ch-title">Streaming Responses</span></a></li>
+            <li class=""><a href="05-prompt-caching.html"><span class="ch-num">05</span><span class="ch-title">Prompt Caching</span></a></li>
+            <li class=""><a href="06-extended-thinking.html"><span class="ch-num">06</span><span class="ch-title">Extended Thinking</span></a></li>
+            <li class="active"><a href="07-files-pdfs-and-vision.html" aria-current="page"><span class="ch-num">07</span><span class="ch-title">Files, PDFs, and Vision</span></a></li>
+            <li class=""><a href="08-batch-and-async.html"><span class="ch-num">08</span><span class="ch-title">Batch and Async</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Files, PDFs, and Vision</h1>
+<p>Claude isn't text-only. You can hand it images and PDFs and ask it to look at them. The API handles each as a content block alongside your text, and the model treats them as part of the conversation.</p>
+<h2 id="sending-an-image">Sending an image</h2>
+<p>Two ways to pass an image: base64-encoded inline, or a URL the model fetches.</p>
+<p>Base64 (best for local files, anything sensitive):</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">base64</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="n">img_data</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">standard_b64encode</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;chart.png&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+
+<span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">,</span>
+    <span class="n">max_tokens</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
+    <span class="n">messages</span><span class="o">=</span><span class="p">[{</span>
+        <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;image&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;base64&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;media_type&quot;</span><span class="p">:</span> <span class="s2">&quot;image/png&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">img_data</span><span class="p">,</span>
+                <span class="p">},</span>
+            <span class="p">},</span>
+            <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;What&#39;s the takeaway from this chart?&quot;</span><span class="p">},</span>
+        <span class="p">],</span>
+    <span class="p">}],</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<p>URL (best for public images):</p>
+<div class="codehilite"><pre><span></span><code><span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;url&quot;</span><span class="p">,</span> <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="s2">&quot;https://example.com/a.jpg&quot;</span><span class="p">}}</span>
+</code></pre></div>
+
+<p>Supported formats: PNG, JPEG, GIF, WebP. Keep file sizes reasonable — images are tokenized by area, and a 4K photo eats more context than you'd think.</p>
+<h2 id="what-vision-is-good-at">What vision is good at</h2>
+<p>Strong cases:</p>
+<ul>
+<li><strong>Charts and graphs.</strong> Read values, summarize trends, spot anomalies.</li>
+<li><strong>Screenshots.</strong> Describe a UI, find an error message, transcribe table content.</li>
+<li><strong>Diagrams.</strong> Architecture diagrams, flow charts, whiteboard sketches.</li>
+<li><strong>Documents.</strong> Read printed or hand-written text (OCR-like, though not perfect).</li>
+<li><strong>Photographs.</strong> Identify objects, infer context, count items.</li>
+</ul>
+<p>Less strong:</p>
+<ul>
+<li><strong>Pixel-perfect reading.</strong> Tiny labels, dense legal text, blurry photos.</li>
+<li><strong>Spatial reasoning at high precision.</strong> "Exactly how far apart are these dots?"</li>
+<li><strong>Identifying specific people.</strong> Won't, and you shouldn't ask.</li>
+</ul>
+<h2 id="sending-a-pdf">Sending a PDF</h2>
+<p>PDFs come in as their own content block type. Claude can read both the text and the images inside.</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">base64</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="n">pdf_data</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">standard_b64encode</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;report.pdf&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+
+<span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">,</span>
+    <span class="n">max_tokens</span><span class="o">=</span><span class="mi">2048</span><span class="p">,</span>
+    <span class="n">messages</span><span class="o">=</span><span class="p">[{</span>
+        <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;document&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;base64&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;media_type&quot;</span><span class="p">:</span> <span class="s2">&quot;application/pdf&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">pdf_data</span><span class="p">,</span>
+                <span class="p">},</span>
+            <span class="p">},</span>
+            <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;Summarize the recommendations section.&quot;</span><span class="p">},</span>
+        <span class="p">],</span>
+    <span class="p">}],</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<p>There's also a Files API for storing larger PDFs once and referencing them across many calls — useful when the same document gets asked about repeatedly. You upload it once, get back a <code>file_id</code>, and reference that ID instead of re-sending the bytes every time.</p>
+<h2 id="combining-text-and-image-and-pdf-in-one-turn">Combining text and image (and PDF) in one turn</h2>
+<p>You can mix any number of blocks in a single user message. A common pattern:</p>
+<div class="codehilite"><pre><span></span><code><span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="p">{</span><span class="o">...</span><span class="p">}},</span>          <span class="c1"># screenshot</span>
+    <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="p">{</span><span class="o">...</span><span class="p">}},</span>          <span class="c1"># before/after</span>
+    <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;document&quot;</span><span class="p">,</span> <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="p">{</span><span class="o">...</span><span class="p">}},</span>       <span class="c1"># the design spec</span>
+    <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;Compare the implementation in these &quot;</span>
+                              <span class="s2">&quot;screenshots against the spec. List &quot;</span>
+                              <span class="s2">&quot;discrepancies.&quot;</span><span class="p">}</span>
+<span class="p">]}</span>
+</code></pre></div>
+
+<p>This is how you build "review my work" features. The model reads all of it as one coherent message.</p>
+<h2 id="output-is-still-just-text">Output is still just text</h2>
+<p>The model takes images and PDFs as <em>input</em> but only produces <em>text</em> (or tool calls). It doesn't generate images. If you need image generation, you'd combine Claude with an image model.</p>
+<h2 id="token-math">Token math</h2>
+<p>Images and PDFs cost real tokens. Rough rules:</p>
+<ul>
+<li>An image is sized by resolution and complexity. Expect roughly 1,000–3,000 tokens for a typical screenshot.</li>
+<li>A PDF charges per page; complex layouts cost more than plain text.</li>
+</ul>
+<p>If you're processing high volumes — every customer's invoice, every support ticket screenshot — measure cost per item early. The economics can shift fast.</p>
+<h2 id="a-practical-tip">A practical tip</h2>
+<p>When asking about an image, frame the question first, <em>then</em> the image. "Look at this screenshot and find the error message" puts the model in the right mode before it parses pixels. Bare image with no prompt makes it guess what you want.</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">Mark as complete</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="06-extended-thinking.html"><span class="dir">← Previous</span><span class="title">Extended Thinking</span></a>
+          <a class="chapter-nav-next" href="08-batch-and-async.html"><span class="dir">Next →</span><span class="title">Batch and Async</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">On this page</div>
+        <ul>
+            <li><a href="#sending-an-image">Sending an image</a></li>
+            <li><a href="#what-vision-is-good-at">What vision is good at</a></li>
+            <li><a href="#sending-a-pdf">Sending a PDF</a></li>
+            <li><a href="#combining-text-and-image-and-pdf-in-one-turn">Combining text and image (and PDF) in one turn</a></li>
+            <li><a href="#output-is-still-just-text">Output is still just text</a></li>
+            <li><a href="#token-math">Token math</a></li>
+            <li><a href="#a-practical-tip">A practical tip</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../assets/script.js"></script>
+</body>
+</html>

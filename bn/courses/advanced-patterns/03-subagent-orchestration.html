@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subagent Orchestration — অ্যাডভান্সড প্যাটার্ন</title>
+  <link rel="stylesheet" href="../../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">ওপেন গাইড · অ্যাডভান্সড প্যাটার্ন</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">লার্ন ক্লড</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../../index.html">হোম</a>
+      <span class="sep">›</span>
+      <a href="index.html">অ্যাডভান্সড প্যাটার্ন</a>
+      <span class="sep">›</span>
+      <span class="current">Subagent Orchestration</span>
+    </nav>
+    <a class="lang-toggle" href="../../../courses/advanced-patterns/03-subagent-orchestration.html" data-action="set-lang">Read in English</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">কোর্স</span>
+          <a href="index.html">অ্যাডভান্সড প্যাটার্ন</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> সম্পন্ন</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-agent-loops.html"><span class="ch-num">01</span><span class="ch-title">Agent Loop</span></a></li>
+            <li class=""><a href="02-multi-step-workflows.html"><span class="ch-num">02</span><span class="ch-title">Multi-step Workflow</span></a></li>
+            <li class="active"><a href="03-subagent-orchestration.html" aria-current="page"><span class="ch-num">03</span><span class="ch-title">Subagent Orchestration</span></a></li>
+            <li class=""><a href="04-building-mcp-servers.html"><span class="ch-num">04</span><span class="ch-title">MCP Server বানানো</span></a></li>
+            <li class=""><a href="05-evaluation-and-testing.html"><span class="ch-num">05</span><span class="ch-title">Evaluation ও Testing</span></a></li>
+            <li class=""><a href="06-production-readiness.html"><span class="ch-num">06</span><span class="ch-title">Production Readiness</span></a></li>
+            <li class=""><a href="07-cost-optimization.html"><span class="ch-num">07</span><span class="ch-title">Cost Optimization</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Subagent Orchestration</h1>
+<p>একটা <strong>subagent</strong> হলো অন্য Claude session দ্বারা spawn করা একটা Claude session — কাজের একটা specific chunk handle করতে। Parent ফেরত পায় কী হয়েছে তার একটা summary — পুরো transcript না। এটা kit-এর সবচেয়ে underrated tool, কারণ এটা এমন একটা problem solve করে যা অন্য কিছু ভালোভাবে করে না: <strong>scale-এ context management</strong>।</p>
+<h2 id="subagent-problem-solve">Subagent যে problem solve করে</h2>
+<p>আপনার main agent-কে একটা task finish করতে পাঁচটা কাজ করতে হবে। প্রতিটার জন্য কয়েকটা file পড়তে হবে। Main agent পাঁচটা sequentially করলে — শেষে পঞ্চাশটা file context-এ load হয়ে গেছে। এখন তারপরের সব slow ও expensive, এবং prompt bloated বলে quality drop।</p>
+<p>Solution: প্রতিটা "thing" subagent-কে delegate করুন। Subagent নিজের file পড়ে, নিজের কাজ করে, একটা 200-word summary return করে। Main agent পাঁচটা summary absorb করে — clean, focused, cheap।</p>
+<h2 id="_1">কখন ব্যবহার করবেন</h2>
+<p>একটা task ভালো subagent candidate যখন এটা:</p>
+<ul>
+<li><strong>Self-contained।</strong> Subagent-এর নিজস্ব context — mid-flight-এ parent যা জানে সহজে reference করতে পারে না।</li>
+<li><strong>Read-heavy।</strong> Audit, summary, "সব X খুঁজে দাও" task। Where most কাজ information consume করা।</li>
+<li><strong>Independent।</strong> এই মুহূর্তে অন্য subagent কী করছে তার উপর depend করে না।</li>
+<li><strong>Parallelizable।</strong> Bonus — একসাথে কয়েকটা spawn করতে পারেন।</li>
+</ul>
+<p>খারাপ subagent candidate: small one-off task (overhead worth না), tightly coupled subtask (state pass-এ কাজের চেয়ে বেশি সময়), যেখানে parent-কে summary না full output সত্যিই দরকার।</p>
+<h2 id="spawn">একটা spawn করা</h2>
+<p>Claude Code-এ Task / Agent tool subagent spawn করে। আপনার নিজের API code-এ এটা শুধু আরেকটা <code>messages.create()</code> call — নিজস্ব system prompt, নিজস্ব tool, নিজস্ব message history সহ।</p>
+<p>একটা skeleton:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">spawn_subagent</span><span class="p">(</span><span class="n">task_brief</span><span class="p">,</span> <span class="n">allowed_tools</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">):</span>
+    <span class="n">system</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">You are a focused subagent. Your job is to complete the task below.</span>
+<span class="s2">Return ONLY your final result — no chatter, no commentary on your process.</span>
+
+<span class="s2">Task:</span>
+<span class="si">{</span><span class="n">task_brief</span><span class="si">}</span>
+<span class="s2">&quot;&quot;&quot;</span>
+    <span class="n">resp</span> <span class="o">=</span> <span class="n">run_agent</span><span class="p">(</span>
+        <span class="n">client</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">allowed_tools</span><span class="p">,</span>
+        <span class="n">user_task</span><span class="o">=</span><span class="s2">&quot;Complete the task and return your result.&quot;</span><span class="p">,</span>
+        <span class="n">max_iters</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>   <span class="c1"># final text block</span>
+</code></pre></div>
+
+<p>System prompt এখানে অনেক কাজ করে। আপনি এমন একটা subagent চান যা <em>শেষ</em> করে এবং একটা clean answer return করে — clarification চায় না বা ramble করে না।</p>
+<h2 id="briefing-matters">Briefing matters</h2>
+<p>Subagent quality-র single biggest determinant brief। একটা subagent-এর parent-এর কোনো context নেই — এটা আপনার project, goal, codebase জানে না। Brief এমনভাবে লিখুন যেন একজন stranger walk in করে 20 মিনিটে deliver করতে হবে:</p>
+<ul>
+<li><strong>কী</strong> task। Concrete ও bounded।</li>
+<li><strong>কেন</strong> matter করে (এক বাক্য — subagent-কে কী good সেটার একটা sense দেয়)।</li>
+<li>আপনি <strong>কী rule out করেছেন</strong> (re-work বাঁচায়)।</li>
+<li><strong>কোথায় দেখবে</strong> (path, search term, URL)।</li>
+<li><strong>কী format-এ</strong> answer।</li>
+<li><strong>কী out of scope।</strong></li>
+</ul>
+<p>Good brief একটা paragraph বা দুটো। Half a sentence — vague result পাবেন।</p>
+<h2 id="parallel-subagent">Parallel subagent</h2>
+<p>কয়েকটা independent sub-task থাকলে — parallel-এ run করুন:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">fan_out</span><span class="p">(</span><span class="n">briefs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="p">(</span>
+        <span class="n">spawn_subagent_async</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="s2">&quot;task&quot;</span><span class="p">],</span> <span class="n">b</span><span class="p">[</span><span class="s2">&quot;tools&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">briefs</span>
+    <span class="p">))</span>
+</code></pre></div>
+
+<p>Win এখানে compound করে। পাঁচটা subagent parallel-এ মোটামুটি এক subagent-এর সময়ে শেষ। Especially nice "N hypothesis explore, কোনটা best দেখাচ্ছে report করো"-এর জন্য।</p>
+<h2 id="over-decompose">Over-decompose করবেন না</h2>
+<p>প্রতিটা task দশটা subagent-এ ভাঙার লোভ হয়। Resist করুন। Subagent-এর আছে:</p>
+<ul>
+<li>Overhead — spawn, brief, summarize সব token খরচ।</li>
+<li>Risk — প্রতিটা thread হারানোর একটা path add করে।</li>
+</ul>
+<p>Useful rule: spawn করুন যখন task-এর cost (context, token বা attention-এ) brief ও summary-এর cost-এর <em>বেশি</em>। Task short হলে — inline করুন।</p>
+<h2 id="common-pattern-explore-execute">একটা common pattern: explore + execute</h2>
+<p>একটা surprisingly powerful template:</p>
+<ol>
+<li><strong>Main agent problem পড়ে কাজ identify করে।</strong></li>
+<li><strong>Main agent এক বা একাধিক "explore" subagent spawn করে</strong> — codebase / docs / data investigate করতে। প্রতিটা একটা short report return করে।</li>
+<li><strong>Main agent report synthesize করে এবং একটা plan লেখে।</strong></li>
+<li><strong>Main agent plan execute করে</strong> (বা per chunk execution subagent spawn করে)।</li>
+</ol>
+<p>Main agent-এর context high-level plan ও synthesis-এ focused রাখেন, deep reading throwaway children-এ। এটা মোটামুটি — একজন senior engineer team-কে যেভাবে delegate করেন।</p>
+<h2 id="output-watch">Output watch করুন</h2>
+<p>Subagent summary great — যতক্ষণ না। যে subagent confidently summarize করে "সব check করেছি, looks fine" — সেই subagent-কে spot-check করবেন। High-stakes কাজের জন্য, subagent trace sample করুন (harness সাধারণত save করে) এবং actual interaction পড়ুন, summary না। Trust, but verify।</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">সম্পন্ন হিসেবে চিহ্নিত করুন</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="02-multi-step-workflows.html"><span class="dir">← পূর্ববর্তী</span><span class="title">Multi-step Workflow</span></a>
+          <a class="chapter-nav-next" href="04-building-mcp-servers.html"><span class="dir">পরবর্তী →</span><span class="title">MCP Server বানানো</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">এই পেজে</div>
+        <ul>
+            <li><a href="#subagent-যে-problem-solve-করে">Subagent যে problem solve করে</a></li>
+            <li><a href="#কখন-ব্যবহার-করবেন">কখন ব্যবহার করবেন</a></li>
+            <li><a href="#একটা-spawn-করা">একটা spawn করা</a></li>
+            <li><a href="#briefing-matters">Briefing matters</a></li>
+            <li><a href="#parallel-subagent">Parallel subagent</a></li>
+            <li><a href="#over-decompose-করবেন-না">Over-decompose করবেন না</a></li>
+            <li><a href="#একটা-common-pattern-explore-execute">একটা common pattern: explore + execute</a></li>
+            <li><a href="#output-watch-করুন">Output watch করুন</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../../assets/script.js"></script>
+</body>
+</html>

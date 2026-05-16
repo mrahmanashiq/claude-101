@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude যেসব Tool ব্যবহার করতে পারে — Claude Code</title>
+  <link rel="stylesheet" href="../../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">ওপেন গাইড · Claude Code</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">লার্ন ক্লড</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../../index.html">হোম</a>
+      <span class="sep">›</span>
+      <a href="index.html">Claude Code</a>
+      <span class="sep">›</span>
+      <span class="current">Claude যেসব Tool ব্যবহার করতে পারে</span>
+    </nav>
+    <a class="lang-toggle" href="../../../courses/claude-code/04-tools-claude-can-use.html" data-action="set-lang">Read in English</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">কোর্স</span>
+          <a href="index.html">Claude Code</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> সম্পন্ন</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-what-is-claude-code.html"><span class="ch-num">01</span><span class="ch-title">Claude Code কী?</span></a></li>
+            <li class=""><a href="02-your-first-session.html"><span class="ch-num">02</span><span class="ch-title">আপনার প্রথম Session</span></a></li>
+            <li class=""><a href="03-slash-commands.html"><span class="ch-num">03</span><span class="ch-title">Slash Command</span></a></li>
+            <li class="active"><a href="04-tools-claude-can-use.html" aria-current="page"><span class="ch-num">04</span><span class="ch-title">Claude যেসব Tool ব্যবহার করতে পারে</span></a></li>
+            <li class=""><a href="05-claude-md.html"><span class="ch-num">05</span><span class="ch-title">CLAUDE.md — Project Memory</span></a></li>
+            <li class=""><a href="06-skills-subagents-hooks.html"><span class="ch-num">06</span><span class="ch-title">Skill, Subagent ও Hook</span></a></li>
+            <li class=""><a href="07-mcp-servers.html"><span class="ch-num">07</span><span class="ch-title">MCP Server</span></a></li>
+            <li class=""><a href="08-workflow-patterns.html"><span class="ch-num">08</span><span class="ch-title">Workflow Pattern</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Claude যেসব Tool ব্যবহার করতে পারে</h1>
+<p>Agent দুনিয়ায় "tool" মানে — model-এর call করার অনুমতি আছে এমন একটা function। Claude Code একটা built-in toolkit নিয়ে আসে — file পড়া, file edit করা, shell command run করা, search, URL fetch, ইত্যাদি — এবং সেই toolkit-ই এটাকে chatty-এর বদলে agentic বানায়।</p>
+<p>সাধারণত আপনি নিজে tool invoke করেন না। English-এ task describe করেন; Claude কোন tool call করবে decide করে। কিন্তু toolset বোঝা আপনার 10 মিনিটের সমান value, কারণ এটা বলে — agent কী পারে এবং কী পারে না, এবং কীভাবে request phrase করলে এটা সঠিক tool pick করে।</p>
+<h2 id="core-file-tool">Core file tool</h2>
+<ul>
+<li><strong>Read</strong> — একটা file open করে conversation-এ load করে। প্রায় সব সময় ব্যবহার।</li>
+<li><strong>Write</strong> — দেওয়া content দিয়ে একটা নতুন file create করে। Scratch থেকে শুরু করার সময় explicitly চাওয়া হয়।</li>
+<li><strong>Edit</strong> — existing file-এ একটা specific string নতুন content দিয়ে replace করে। Change-এর workhorse; Write-এর চেয়ে safer কারণ এটা surrounding context specify করতে বলে।</li>
+<li><strong>Glob</strong> — name pattern দিয়ে file খুঁজে দেয় (যেমন <code>src/**/*.ts</code>)।</li>
+<li><strong>Grep</strong> — regex দিয়ে file content search করে।</li>
+</ul>
+<p>বেশিরভাগ session: Glob/Grep দিয়ে locate, Read দিয়ে confirm, Edit দিয়ে change।</p>
+<h2 id="shell-tool">Shell tool</h2>
+<ul>
+<li><strong>Bash</strong> (বা Windows-এ <strong>PowerShell</strong>) — project directory-তে একটা command run করে।</li>
+</ul>
+<p>Shell access-ই Claude-কে actually কাজ verify করতে দেয় — test run, type-check, lint, dev server start। By default risky command approval চায়। Safe-গুলো pre-approve করতে পারেন।</p>
+<h2 id="web-tool">Web tool</h2>
+<ul>
+<li><strong>WebFetch</strong> — একটা URL load করে content পড়ে (HTML text-এ strip করা)।</li>
+<li><strong>WebSearch</strong> — relevant page-এর জন্য web search করে।</li>
+</ul>
+<p>যখন Claude-এর training data-এ নেই এমন documentation দরকার — গত সপ্তাহে ship হওয়া library version, vendor page-এ একটা API spec — তখন useful।</p>
+<h2 id="agent-tool">Agent tool</h2>
+<ul>
+<li><strong>Task</strong> (বা <strong>Agent</strong>) — isolation-এ কাজের একটা chunk handle করতে sub-agent spawn করে।</li>
+</ul>
+<p>এটা একটা force multiplier। একটা conversation-এ ছয়টা কাজ করে context ভরে ফেলার বদলে, Claude একটা discrete subtask sub-agent-কে দিতে পারে, সেটা run করতে দিতে পারে, এবং শুধু result absorb করতে পারে। Advanced Patterns course-এ depth-এ cover করা হয়েছে।</p>
+<h2 id="mcp-server-tool">MCP server থেকে tool</h2>
+<p>Built-in set-এর বাইরে <strong>MCP server</strong> plug করতে পারেন — external program যা নিজস্ব tool expose করে। Database-এর জন্য server আছে, browser-এর জন্য, JIRA, Notion, GitHub, design tool — সব কিছুর। একবার একটা server configured হলে, এর tool Claude-এর toolset-এ দেখা দেয় এবং একই loop-এ এটা ব্যবহার করতে পারে।</p>
+<p>MCP-এর জন্য আলাদা chapter আছে; আপাতত এটুকু জানুন যে toolset extensible।</p>
+<h2 id="claude-tool-pick">Claude কীভাবে tool pick করে</h2>
+<p>Model prompt-এর অংশ হিসেবে available tool ও তাদের schema-এর list পায়। যখন decide করে একটা tool দরকার, একটা structured tool-call emit করে (কোন tool, কোন argument-এ)। Harness call run করে এবং result return করে, যা model পরবর্তী turn-এ পড়ে।</p>
+<p>Claude-কে সঠিক tool pick করানোর skill মূলত clear prompting-এর skill-এর মতোই:</p>
+<ul>
+<li><strong>File-এর নাম বলুন।</strong> "<code>src/auth.py</code> edit করো যাতে..." unambiguous। "Auth-এর জিনিসটা edit করো" Claude-কে আগে search করায়, কখনো ভুল জিনিস।</li>
+<li><strong>Verb state করুন।</strong> "Read", "list", "run", "check" — verb tool-এর সাথে cleanly map করে।</li>
+<li><strong>Scope limit করুন।</strong> "<code>tests/</code> folder-এ deprecated mock ব্যবহার করছে এমন কোনো test খুঁজে বের করো" — Claude-কে exactly কোথায় দেখতে হবে ও কোন tool ব্যবহার করতে হবে বলে দেয়।</li>
+</ul>
+<p>আপনার request যত concrete, Claude তত কম ভুল tool call করে — এবং তত দ্রুত একটা ভালো answer পান।</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">সম্পন্ন হিসেবে চিহ্নিত করুন</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="03-slash-commands.html"><span class="dir">← পূর্ববর্তী</span><span class="title">Slash Command</span></a>
+          <a class="chapter-nav-next" href="05-claude-md.html"><span class="dir">পরবর্তী →</span><span class="title">CLAUDE.md — Project Memory</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">এই পেজে</div>
+        <ul>
+            <li><a href="#core-file-tool">Core file tool</a></li>
+            <li><a href="#shell-tool">Shell tool</a></li>
+            <li><a href="#web-tool">Web tool</a></li>
+            <li><a href="#agent-tool">Agent tool</a></li>
+            <li><a href="#mcp-server-থেকে-tool">MCP server থেকে tool</a></li>
+            <li><a href="#claude-কীভাবে-tool-pick-করে">Claude কীভাবে tool pick করে</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../../assets/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Extended Thinking — Claude API &amp; SDK</title>
+  <link rel="stylesheet" href="../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">Open Guide · Claude API &amp; SDK</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">Learn Claude</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="index.html">Claude API &amp; SDK</a>
+      <span class="sep">›</span>
+      <span class="current">Extended Thinking</span>
+    </nav>
+    <a class="lang-toggle" href="../../bn/courses/claude-api/06-extended-thinking.html" data-action="set-lang">বাংলায় পড়ুন</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">Course</span>
+          <a href="index.html">Claude API &amp; SDK</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> completed</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-getting-started.html"><span class="ch-num">01</span><span class="ch-title">Getting Started with the API</span></a></li>
+            <li class=""><a href="02-messages-api-basics.html"><span class="ch-num">02</span><span class="ch-title">Messages API Basics</span></a></li>
+            <li class=""><a href="03-tool-use.html"><span class="ch-num">03</span><span class="ch-title">Tool Use</span></a></li>
+            <li class=""><a href="04-streaming.html"><span class="ch-num">04</span><span class="ch-title">Streaming Responses</span></a></li>
+            <li class=""><a href="05-prompt-caching.html"><span class="ch-num">05</span><span class="ch-title">Prompt Caching</span></a></li>
+            <li class="active"><a href="06-extended-thinking.html" aria-current="page"><span class="ch-num">06</span><span class="ch-title">Extended Thinking</span></a></li>
+            <li class=""><a href="07-files-pdfs-vision.html"><span class="ch-num">07</span><span class="ch-title">Files, PDFs, and Vision</span></a></li>
+            <li class=""><a href="08-batch-and-async.html"><span class="ch-num">08</span><span class="ch-title">Batch and Async</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Extended Thinking</h1>
+<p>Extended thinking is Claude's built-in scratchpad. When enabled, the model produces an internal reasoning block — invisible to end users by default — before committing to its final answer. On hard problems, this consistently improves quality. On easy problems, it's wasted tokens. The whole game is knowing when to turn it on.</p>
+<h2 id="turning-it-on">Turning it on</h2>
+<p>It's a parameter on the call:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">,</span>
+    <span class="n">max_tokens</span><span class="o">=</span><span class="mi">4096</span><span class="p">,</span>
+    <span class="n">thinking</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="s2">&quot;budget_tokens&quot;</span><span class="p">:</span> <span class="mi">2048</span><span class="p">},</span>
+    <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;Solve this multi-step problem...&quot;</span><span class="p">},</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<p>Two fields:</p>
+<ul>
+<li><strong><code>type</code></strong> — <code>"enabled"</code> or <code>"disabled"</code>. Default is disabled.</li>
+<li><strong><code>budget_tokens</code></strong> — how many tokens the thinking block is allowed to consume. The model may use less. This is part of <code>max_tokens</code> — set <code>max_tokens</code> high enough to include both the thinking and the visible answer.</li>
+</ul>
+<h2 id="what-you-get-back">What you get back</h2>
+<p>The response's <code>content</code> will include a <code>thinking</code> block in addition to the text:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">resp</span><span class="o">.</span><span class="n">content</span>
+<span class="c1"># [</span>
+<span class="c1">#   ThinkingBlock(type=&#39;thinking&#39;, thinking=&#39;Let me break this down...&#39;),</span>
+<span class="c1">#   TextBlock(type=&#39;text&#39;, text=&#39;The answer is...&#39;),</span>
+<span class="c1"># ]</span>
+</code></pre></div>
+
+<p>You typically don't render the thinking to end users. It's useful for:</p>
+<ul>
+<li><strong>Debugging.</strong> When the model gets something wrong, the thinking shows where its logic went sideways.</li>
+<li><strong>Logging.</strong> Saving the thinking lets you analyze hard cases later.</li>
+<li><strong>Multi-turn continuity.</strong> If you're continuing a conversation, you can pass the previous turn's thinking back (or not) — covered below.</li>
+</ul>
+<h2 id="when-it-helps">When it helps</h2>
+<p>The model's quality on these task types tends to improve with thinking enabled:</p>
+<ul>
+<li>Multi-step arithmetic or symbolic reasoning.</li>
+<li>Code with non-obvious correctness criteria.</li>
+<li>Logical puzzles, constraint satisfaction.</li>
+<li>Trade-off analysis ("which approach is better given these requirements?").</li>
+<li>Anything where you've seen the model give confident-but-wrong answers without thinking.</li>
+</ul>
+<p>It rarely helps on:</p>
+<ul>
+<li>Short factual lookups.</li>
+<li>Writing tasks where flow matters more than logic.</li>
+<li>Tasks where the model already nails it without thinking.</li>
+</ul>
+<p>A simple test: pick 20 representative hard prompts. Run them with and without thinking. Compare. If the lift is real, enable it for the production path. If it isn't, you've saved yourself 30% of the cost.</p>
+<h2 id="budget-sizing">Budget sizing</h2>
+<p>Higher budget = more reasoning room, slower response, more cost. Useful ranges:</p>
+<ul>
+<li><strong>Up to ~1,024 tokens</strong> — light reasoning. Costs almost nothing extra, helps marginally.</li>
+<li><strong>2,048 to 4,096</strong> — meaningful reasoning. Good default for hard tasks.</li>
+<li><strong>8,192+</strong> — heavy reasoning. Multi-step proofs, complex analysis. Only for the hardest tail.</li>
+</ul>
+<p>Set it once based on your task and don't churn it. The model is allowed to use less than the budget, so being generous is mostly safe.</p>
+<h2 id="interaction-with-tools">Interaction with tools</h2>
+<p>Thinking works alongside tool use. The model thinks, decides which tool to call, calls it, receives the result, and continues. Each "think" segment is a fresh reasoning step.</p>
+<p>In the response you may see thinking blocks interleaved with tool_use blocks. The agent loop is the same as the basic tool-use loop — just be aware of which blocks to preserve in subsequent turns.</p>
+<h2 id="passing-thinking-back">Passing thinking back</h2>
+<p>For multi-turn conversations, the API will accept the assistant's previous thinking blocks in the next call. Whether to send them back depends on your goals:</p>
+<ul>
+<li><strong>Send them.</strong> The model can continue reasoning where it left off. Better continuity. More expensive (those tokens count as input).</li>
+<li><strong>Drop them.</strong> Cheaper, but the model starts fresh. Fine for unrelated next questions.</li>
+</ul>
+<p>Default is to keep thinking blocks scoped to the turn that produced them; send back only if you have a reason to.</p>
+<h2 id="a-philosophical-note">A philosophical note</h2>
+<p>Thinking isn't truly hidden reasoning the way human thought is hidden. It's just <em>more output tokens, generated before the official answer</em>. The model has more room to commit to wrong paths and correct itself, which is exactly the benefit. Treat it like a scratchpad: useful, but not magic.</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">Mark as complete</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="05-prompt-caching.html"><span class="dir">← Previous</span><span class="title">Prompt Caching</span></a>
+          <a class="chapter-nav-next" href="07-files-pdfs-vision.html"><span class="dir">Next →</span><span class="title">Files, PDFs, and Vision</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">On this page</div>
+        <ul>
+            <li><a href="#turning-it-on">Turning it on</a></li>
+            <li><a href="#what-you-get-back">What you get back</a></li>
+            <li><a href="#when-it-helps">When it helps</a></li>
+            <li><a href="#budget-sizing">Budget sizing</a></li>
+            <li><a href="#interaction-with-tools">Interaction with tools</a></li>
+            <li><a href="#passing-thinking-back">Passing thinking back</a></li>
+            <li><a href="#a-philosophical-note">A philosophical note</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../assets/script.js"></script>
+</body>
+</html>

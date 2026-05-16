@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skill, Subagent ও Hook — Claude Code</title>
+  <link rel="stylesheet" href="../../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">ওপেন গাইড · Claude Code</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">লার্ন ক্লড</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../../index.html">হোম</a>
+      <span class="sep">›</span>
+      <a href="index.html">Claude Code</a>
+      <span class="sep">›</span>
+      <span class="current">Skill, Subagent ও Hook</span>
+    </nav>
+    <a class="lang-toggle" href="../../../courses/claude-code/06-skills-subagents-hooks.html" data-action="set-lang">Read in English</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">কোর্স</span>
+          <a href="index.html">Claude Code</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> সম্পন্ন</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-what-is-claude-code.html"><span class="ch-num">01</span><span class="ch-title">Claude Code কী?</span></a></li>
+            <li class=""><a href="02-your-first-session.html"><span class="ch-num">02</span><span class="ch-title">আপনার প্রথম Session</span></a></li>
+            <li class=""><a href="03-slash-commands.html"><span class="ch-num">03</span><span class="ch-title">Slash Command</span></a></li>
+            <li class=""><a href="04-tools-claude-can-use.html"><span class="ch-num">04</span><span class="ch-title">Claude যেসব Tool ব্যবহার করতে পারে</span></a></li>
+            <li class=""><a href="05-claude-md.html"><span class="ch-num">05</span><span class="ch-title">CLAUDE.md — Project Memory</span></a></li>
+            <li class="active"><a href="06-skills-subagents-hooks.html" aria-current="page"><span class="ch-num">06</span><span class="ch-title">Skill, Subagent ও Hook</span></a></li>
+            <li class=""><a href="07-mcp-servers.html"><span class="ch-num">07</span><span class="ch-title">MCP Server</span></a></li>
+            <li class=""><a href="08-workflow-patterns.html"><span class="ch-num">08</span><span class="ch-title">Workflow Pattern</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Skill, Subagent ও Hook</h1>
+<p>প্রথম দেখায় তিনটে concept similar মনে হয় কিন্তু আলাদা problem solve করে। Claude Code casually ব্যবহার করে থাকলে কোথায় কী fit করে — না জেনে এদের সাথে ধাক্কা খেতে পারেন। চলুন line স্পষ্ট আঁকি।</p>
+<h2 id="skill-focused-expertise">Skill: চাহিদামতো focused expertise</h2>
+<p><strong>Skill</strong> হলো একটা self-contained instruction set — একটা markdown file plus optional helper script — যা relevant task দেখলে Claude invoke করতে পারে। Skill auto-discovered। Explicitly call করতে হয় না; harness available skill load করে এবং Claude যেগুলো apply সেগুলো pick করে।</p>
+<p>Example: একটা <code>pdf-extract</code> skill যেটা জানে কীভাবে একটা particular tool ব্যবহার করে PDF থেকে text বের করতে হয়। "এই PDF থেকে text extract করো" বললে — Claude notice করে skill আছে, এবং guess না করে সেটা ব্যবহার করে।</p>
+<p>Skill থাকে <code>~/.claude/skills/&lt;name&gt;/</code>-তে বা একটা plugin-এ। প্রতিটার একটা <code>SKILL.md</code> যা describe করে — এটা কী করে এবং কখন ব্যবহার, plus যেকোনো code বা data যা skill-এর দরকার।</p>
+<p>Skill ব্যবহার করুন যখন:</p>
+<ul>
+<li>একটা specific kind-এর task আছে যেটা specific instruction বা helper code থেকে benefit হয়।</li>
+<li>Task যথেষ্ট আসে যে প্রতিবার re-explain করা wasteful।</li>
+<li>আপনি এটা ভাবা ছাড়া অনেক session ও conversation-এ available চান।</li>
+</ul>
+<h2 id="subagent-chunk">Subagent: কাজের একটা chunk হাতে দেওয়া</h2>
+<p><strong>Subagent</strong> হলো একটা আলাদা Claude session — main one দ্বারা spawned — যা isolation-এ একটা specific subtask handle করে। নিজের context window-এ, নিজের (প্রায়ই narrow) tool set-এ run করে, এবং parent-কে একটা single result return করে।</p>
+<p>Pattern:</p>
+<div class="codehilite"><pre><span></span><code>Main agent: &quot;30-file module refactor করতে হবে। প্রথমে current state audit করি।&quot;
+
+Subagent spawn → &quot;src/legacy/-এর প্রতিটা file পড়ো, public API surface 
+summarize করো, export-এর list এবং তাদের caller return করো।&quot;
+
+Subagent fresh context-এ run করে, 200-line report produce করে।
+
+Main agent report পড়ে, next step decide করে, original context-এ 
+30 file read না *পুড়িয়ে*।
+</code></pre></div>
+
+<p>Subagent ব্যবহার করুন যখন:</p>
+<ul>
+<li>Subtask well-scoped ও self-contained।</li>
+<li>Main context clean ও focused রাখতে চান।</li>
+<li>Subtask যথেষ্ট independent যে parallelize করা যায় (একসাথে কয়েকটা spawn করতে পারেন)।</li>
+</ul>
+<p>Subagent magic problem-solver না। এটা একটা context-management technique।</p>
+<h2 id="hook-tool-call-code">Hook: tool call-এর চারপাশে চলা code</h2>
+<p><strong>Hook</strong> হলো একটা shell command যা Claude Code harness একটা specific মুহূর্তে run করে — tool call-এর আগে, session শেষ হওয়ার পর, file edit-এর পর, ইত্যাদি। Hook configure হয় <code>.claude/settings.json</code>-এ (বা global settings-এ)।</p>
+<p>Common use:</p>
+<ul>
+<li><strong>প্রতিটা edit-এর পর lint।</strong> একটা <code>PostToolUse</code> hook যা <code>Edit</code> tool call-এর পর <code>npm run lint --fix</code> run করে।</li>
+<li><strong>Bad command block।</strong> একটা <code>PreToolUse</code> hook যা dangerous pattern match করা <code>Bash</code> call refuse করে।</li>
+<li><strong>Long task শেষ হলে notification।</strong> একটা <code>Stop</code> hook যা Slack-এ ping করে বা bell বাজায়।</li>
+</ul>
+<p>Hook model-এর problem না — আপনার, harness দ্বারা enforced। Model decide করে না যে এটা run করবে; harness করে, প্রতিবার।</p>
+<h2 id="_1">এদের আলাদা করা</h2>
+<table>
+<thead>
+<tr>
+<th>চাইলে...</th>
+<th>ব্যবহার করুন...</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Claude জানুক X কীভাবে করতে হয় যখন X আসে</td>
+<td>একটা skill</td>
+</tr>
+<tr>
+<td>Claude একটা কাজের chunk delegate করুক context clean রাখতে</td>
+<td>একটা subagent</td>
+</tr>
+<tr>
+<td>প্রতিটা tool call-এর চারপাশে কিছু automatically হোক</td>
+<td>একটা hook</td>
+</tr>
+</tbody>
+</table>
+<p>একটা useful sanity check: skill বদলায় <em>Claude কী করতে পারে</em>। Subagent বদলায় <em>Claude কীভাবে context allocate করে</em>। Hook বদলায় <em>Claude-এর চারপাশে harness কী করে</em>। তিনটা আলাদা layer।</p>
+<h2 id="_2">কোথা থেকে শুরু</h2>
+<p>Skill দিয়ে শুরু করুন। সবচেয়ে user-visible ও সবচেয়ে সহজ payoff। কয়েকটা থাকলে hook আসে — সাধারণত একটা nagging behavior enforce করতে। Serious agentic কাজ করার সময় subagent useful হয়; ততক্ষণ ignore করতে পারেন।</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">সম্পন্ন হিসেবে চিহ্নিত করুন</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="05-claude-md.html"><span class="dir">← পূর্ববর্তী</span><span class="title">CLAUDE.md — Project Memory</span></a>
+          <a class="chapter-nav-next" href="07-mcp-servers.html"><span class="dir">পরবর্তী →</span><span class="title">MCP Server</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">এই পেজে</div>
+        <ul>
+            <li><a href="#skill-চাহিদামতো-focused-expertise">Skill: চাহিদামতো focused expertise</a></li>
+            <li><a href="#subagent-কাজের-একটা-chunk-হাতে-দেওয়া">Subagent: কাজের একটা chunk হাতে দেওয়া</a></li>
+            <li><a href="#hook-tool-call-এর-চারপাশে-চলা-code">Hook: tool call-এর চারপাশে চলা code</a></li>
+            <li><a href="#এদের-আলাদা-করা">এদের আলাদা করা</a></li>
+            <li><a href="#কোথা-থেকে-শুরু">কোথা থেকে শুরু</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../../assets/script.js"></script>
+</body>
+</html>

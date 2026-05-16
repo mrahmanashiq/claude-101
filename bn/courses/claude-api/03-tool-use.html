@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tool Use — Claude API ও SDK</title>
+  <link rel="stylesheet" href="../../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">ওপেন গাইড · Claude API ও SDK</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">লার্ন ক্লড</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../../index.html">হোম</a>
+      <span class="sep">›</span>
+      <a href="index.html">Claude API ও SDK</a>
+      <span class="sep">›</span>
+      <span class="current">Tool Use</span>
+    </nav>
+    <a class="lang-toggle" href="../../../courses/claude-api/03-tool-use.html" data-action="set-lang">Read in English</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">কোর্স</span>
+          <a href="index.html">Claude API ও SDK</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> সম্পন্ন</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-getting-started.html"><span class="ch-num">01</span><span class="ch-title">API দিয়ে শুরু</span></a></li>
+            <li class=""><a href="02-messages-api-basics.html"><span class="ch-num">02</span><span class="ch-title">Messages API-এর Basic</span></a></li>
+            <li class="active"><a href="03-tool-use.html" aria-current="page"><span class="ch-num">03</span><span class="ch-title">Tool Use</span></a></li>
+            <li class=""><a href="04-streaming.html"><span class="ch-num">04</span><span class="ch-title">Streaming Response</span></a></li>
+            <li class=""><a href="05-prompt-caching.html"><span class="ch-num">05</span><span class="ch-title">Prompt Caching</span></a></li>
+            <li class=""><a href="06-extended-thinking.html"><span class="ch-num">06</span><span class="ch-title">Extended Thinking</span></a></li>
+            <li class=""><a href="07-files-pdfs-vision.html"><span class="ch-num">07</span><span class="ch-title">File, PDF ও Vision</span></a></li>
+            <li class=""><a href="08-batch-and-async.html"><span class="ch-num">08</span><span class="ch-title">Batch ও Async</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Tool Use</h1>
+<p>Tool use-ই Claude-কে question-answerer থেকে act করতে পারে এমন কিছুতে পরিণত করে। আপনি function declare করেন; Claude কখন call করবে decide করে; আপনি run করেন; result return করেন। Task শেষ না হওয়া পর্যন্ত loop।</p>
+<p>এটাই Claude Code underneath ব্যবহার করে। বুঝলে — agent বানাতে পারবেন।</p>
+<h2 id="shape">এর shape</h2>
+<p>Plain Messages call থেকে তিনটা জিনিস বদলায়:</p>
+<ol>
+<li>একটা <strong><code>tools</code></strong> array pass করেন — model কী call করার অনুমতি পাচ্ছে describe করে।</li>
+<li>Model <strong><code>tool_use</code></strong> block দিয়ে respond করতে পারে — text-এর বদলে বা পাশাপাশি।</li>
+<li>Tool run করুন, তারপর একটা <strong><code>tool_result</code></strong> message return পাঠিয়ে আবার call করুন।</li>
+</ol>
+<h2 id="tool-declare">একটা tool declare করা</h2>
+<p>একটা tool হলো একটা name, description, এবং একটা input schema (JSON Schema):</p>
+<div class="codehilite"><pre><span></span><code><span class="n">tools</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;get_weather&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Return the current weather for a city.&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;input_schema&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;city&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;City name&quot;</span><span class="p">},</span>
+                <span class="s2">&quot;units&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="s2">&quot;enum&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="s2">&quot;f&quot;</span><span class="p">],</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;c&quot;</span><span class="p">},</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;city&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+</code></pre></div>
+
+<p>Description-এই Claude-কে শেখান tool কীসের জন্য। <em>Explicit হোন।</em> "কখন ব্যবহার করতে হবে," "প্রতিটা parameter-এর মানে," "edge case।" কোন tool call করবে decide করতে — model এই text-ই reasoning-এর উপাদান হিসেবে দেখে।</p>
+<h2 id="call">প্রথম call</h2>
+<div class="codehilite"><pre><span></span><code><span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">,</span>
+    <span class="n">max_tokens</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
+    <span class="n">tools</span><span class="o">=</span><span class="n">tools</span><span class="p">,</span>
+    <span class="n">messages</span><span class="o">=</span><span class="p">[{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;Tokyo-এর আবহাওয়া কেমন?&quot;</span><span class="p">}],</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<p>Claude tool ব্যবহার করতে decide করলে — response-এ একটা <code>tool_use</code> block থাকবে এবং <code>stop_reason</code> হবে <code>"tool_use"</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">resp</span><span class="o">.</span><span class="n">content</span>
+<span class="c1"># [ToolUseBlock(type=&#39;tool_use&#39;, id=&#39;toolu_01ABC...&#39;, name=&#39;get_weather&#39;,</span>
+<span class="c1">#               input={&#39;city&#39;: &#39;Tokyo&#39;, &#39;units&#39;: &#39;c&#39;})]</span>
+</code></pre></div>
+
+<h2 id="run-continue">Run করা ও continue</h2>
+<p>আপনি নিজে function execute করেন, তারপর result return পাঠান:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_weather</span><span class="p">(</span><span class="n">city</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">units</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;c&quot;</span><span class="p">):</span>
+    <span class="c1"># ... real implementation ...</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;temp&quot;</span><span class="p">:</span> <span class="mi">22</span><span class="p">,</span> <span class="s2">&quot;conditions&quot;</span><span class="p">:</span> <span class="s2">&quot;clear&quot;</span><span class="p">}</span>
+
+<span class="c1"># tool_use block বের করুন</span>
+<span class="n">tool_use</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">resp</span><span class="o">.</span><span class="n">content</span> <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;tool_use&quot;</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">get_weather</span><span class="p">(</span><span class="o">**</span><span class="n">tool_use</span><span class="o">.</span><span class="n">input</span><span class="p">)</span>
+
+<span class="c1"># Conversation continue করুন — assistant-এর tool call AND result সহ</span>
+<span class="n">history</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;Tokyo-এর আবহাওয়া কেমন?&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;assistant&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;tool_result&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;tool_use_id&quot;</span><span class="p">:</span> <span class="n">tool_use</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="p">),</span>
+        <span class="p">}</span>
+    <span class="p">]},</span>
+<span class="p">]</span>
+
+<span class="n">final</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">,</span>
+    <span class="n">max_tokens</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
+    <span class="n">tools</span><span class="o">=</span><span class="n">tools</span><span class="p">,</span>
+    <span class="n">messages</span><span class="o">=</span><span class="n">history</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">final</span><span class="o">.</span><span class="n">content</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+<span class="c1"># &quot;Tokyo-তে এখন 22°C এবং clear।&quot;</span>
+</code></pre></div>
+
+<p>Pattern-টা notice করুন: assistant message tool call বহন করে; পরের user message tool result বহন করে। Model কখনো আপনাকে function "run" করতে দেখে না — শুধু call এবং তার পরে result দেখে।</p>
+<h2 id="agent-loop">Agent loop</h2>
+<p>এটাকে generalize করুন:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run_agent</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">tools</span><span class="p">,</span> <span class="n">user_message</span><span class="p">,</span> <span class="n">max_iters</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="n">history</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">user_message</span><span class="p">}]</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iters</span><span class="p">):</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">2048</span><span class="p">,</span>
+            <span class="n">system</span><span class="o">=</span><span class="n">system</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="n">tools</span><span class="p">,</span> <span class="n">messages</span><span class="o">=</span><span class="n">history</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">history</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;assistant&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="p">})</span>
+        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">stop_reason</span> <span class="o">!=</span> <span class="s2">&quot;tool_use&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">resp</span>
+        <span class="c1"># Response-এর প্রতিটা tool call execute করুন</span>
+        <span class="n">tool_results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">block</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;tool_use&quot;</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">TOOL_REGISTRY</span><span class="p">[</span><span class="n">block</span><span class="o">.</span><span class="n">name</span><span class="p">](</span><span class="o">**</span><span class="n">block</span><span class="o">.</span><span class="n">input</span><span class="p">)</span>
+                <span class="n">tool_results</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;tool_result&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;tool_use_id&quot;</span><span class="p">:</span> <span class="n">block</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                    <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="p">),</span>
+                <span class="p">})</span>
+        <span class="n">history</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">tool_results</span><span class="p">})</span>
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Agent didn&#39;t finish within iteration cap.&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>20 line-এ একটা agent। বাকি সব — memory, planning, eval — এর উপরে layer।</p>
+<h2 id="tool-design-tip">Tool design-এর tip</h2>
+<ul>
+<li><strong>Schema ছোট রাখুন।</strong> পাঁচটা parameter অনেক। পনেরোটা unmanageable।</li>
+<li><strong>Schema-এ strong typing।</strong> যেখানে সম্ভব enum, integer constrain, field explicitly require করুন। Schema tight হলে model সেটা better honor করে।</li>
+<li><strong>Default-এ idempotent ও safe।</strong> যে tool-এর side effect আছে (DB-তে write, message send) — extra care দিন। একটা <code>dry_run</code> parameter বা confirmation step ভাবুন।</li>
+<li><strong>পারলে structured data return করুন।</strong> Prose-এর paragraph-এর চেয়ে dict-এ reasoning easier।</li>
+</ul>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">সম্পন্ন হিসেবে চিহ্নিত করুন</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="02-messages-api-basics.html"><span class="dir">← পূর্ববর্তী</span><span class="title">Messages API-এর Basic</span></a>
+          <a class="chapter-nav-next" href="04-streaming.html"><span class="dir">পরবর্তী →</span><span class="title">Streaming Response</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">এই পেজে</div>
+        <ul>
+            <li><a href="#এর-shape">এর shape</a></li>
+            <li><a href="#একটা-tool-declare-করা">একটা tool declare করা</a></li>
+            <li><a href="#প্রথম-call">প্রথম call</a></li>
+            <li><a href="#run-করা-ও-continue">Run করা ও continue</a></li>
+            <li><a href="#agent-loop">Agent loop</a></li>
+            <li><a href="#tool-design-এর-tip">Tool design-এর tip</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../../assets/script.js"></script>
+</body>
+</html>

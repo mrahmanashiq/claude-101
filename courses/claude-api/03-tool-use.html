@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tool Use — Claude API &amp; SDK</title>
+  <link rel="stylesheet" href="../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">Open Guide · Claude API &amp; SDK</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">Learn Claude</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="index.html">Claude API &amp; SDK</a>
+      <span class="sep">›</span>
+      <span class="current">Tool Use</span>
+    </nav>
+    <a class="lang-toggle" href="../../bn/courses/claude-api/03-tool-use.html" data-action="set-lang">বাংলায় পড়ুন</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">Course</span>
+          <a href="index.html">Claude API &amp; SDK</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> completed</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-getting-started.html"><span class="ch-num">01</span><span class="ch-title">Getting Started with the API</span></a></li>
+            <li class=""><a href="02-messages-api-basics.html"><span class="ch-num">02</span><span class="ch-title">Messages API Basics</span></a></li>
+            <li class="active"><a href="03-tool-use.html" aria-current="page"><span class="ch-num">03</span><span class="ch-title">Tool Use</span></a></li>
+            <li class=""><a href="04-streaming.html"><span class="ch-num">04</span><span class="ch-title">Streaming Responses</span></a></li>
+            <li class=""><a href="05-prompt-caching.html"><span class="ch-num">05</span><span class="ch-title">Prompt Caching</span></a></li>
+            <li class=""><a href="06-extended-thinking.html"><span class="ch-num">06</span><span class="ch-title">Extended Thinking</span></a></li>
+            <li class=""><a href="07-files-pdfs-vision.html"><span class="ch-num">07</span><span class="ch-title">Files, PDFs, and Vision</span></a></li>
+            <li class=""><a href="08-batch-and-async.html"><span class="ch-num">08</span><span class="ch-title">Batch and Async</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Tool Use</h1>
+<p>Tool use is what turns Claude from a question-answerer into something that can act. You declare functions; Claude decides when to call them; you run them; you give the results back. Loop until the task is done.</p>
+<p>This is the same machinery Claude Code uses under the hood. Once you understand it, you can build agents.</p>
+<h2 id="the-shape-of-it">The shape of it</h2>
+<p>Three things change from a plain Messages call:</p>
+<ol>
+<li>You pass a <strong><code>tools</code></strong> array describing what the model is allowed to call.</li>
+<li>The model may respond with <strong><code>tool_use</code></strong> blocks instead of (or alongside) text.</li>
+<li>You run the tool, then send back a <strong><code>tool_result</code></strong> message and call again.</li>
+</ol>
+<h2 id="declaring-a-tool">Declaring a tool</h2>
+<p>A tool is a name, a description, and an input schema (JSON Schema):</p>
+<div class="codehilite"><pre><span></span><code><span class="n">tools</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;get_weather&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Return the current weather for a city.&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;input_schema&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;city&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;City name&quot;</span><span class="p">},</span>
+                <span class="s2">&quot;units&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="s2">&quot;enum&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="s2">&quot;f&quot;</span><span class="p">],</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="s2">&quot;c&quot;</span><span class="p">},</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;city&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+</code></pre></div>
+
+<p>The description is where you teach Claude what the tool is for. <em>Be explicit.</em> "When to use this," "what each parameter means," "edge cases." This text is what the model reasons over when deciding whether to call.</p>
+<h2 id="the-first-call">The first call</h2>
+<div class="codehilite"><pre><span></span><code><span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">,</span>
+    <span class="n">max_tokens</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
+    <span class="n">tools</span><span class="o">=</span><span class="n">tools</span><span class="p">,</span>
+    <span class="n">messages</span><span class="o">=</span><span class="p">[{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;What&#39;s the weather in Tokyo?&quot;</span><span class="p">}],</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<p>If Claude decides to use the tool, the response will contain a <code>tool_use</code> block and <code>stop_reason</code> will be <code>"tool_use"</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">resp</span><span class="o">.</span><span class="n">content</span>
+<span class="c1"># [ToolUseBlock(type=&#39;tool_use&#39;, id=&#39;toolu_01ABC...&#39;, name=&#39;get_weather&#39;,</span>
+<span class="c1">#               input={&#39;city&#39;: &#39;Tokyo&#39;, &#39;units&#39;: &#39;c&#39;})]</span>
+</code></pre></div>
+
+<h2 id="running-it-and-continuing">Running it and continuing</h2>
+<p>You execute the function yourself, then send the result back:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_weather</span><span class="p">(</span><span class="n">city</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">units</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;c&quot;</span><span class="p">):</span>
+    <span class="c1"># ... your real implementation ...</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;temp&quot;</span><span class="p">:</span> <span class="mi">22</span><span class="p">,</span> <span class="s2">&quot;conditions&quot;</span><span class="p">:</span> <span class="s2">&quot;clear&quot;</span><span class="p">}</span>
+
+<span class="c1"># Find the tool_use block</span>
+<span class="n">tool_use</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">resp</span><span class="o">.</span><span class="n">content</span> <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;tool_use&quot;</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">get_weather</span><span class="p">(</span><span class="o">**</span><span class="n">tool_use</span><span class="o">.</span><span class="n">input</span><span class="p">)</span>
+
+<span class="c1"># Continue the conversation with the assistant&#39;s tool call AND the result</span>
+<span class="n">history</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;What&#39;s the weather in Tokyo?&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;assistant&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;tool_result&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;tool_use_id&quot;</span><span class="p">:</span> <span class="n">tool_use</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="p">),</span>
+        <span class="p">}</span>
+    <span class="p">]},</span>
+<span class="p">]</span>
+
+<span class="n">final</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">,</span>
+    <span class="n">max_tokens</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
+    <span class="n">tools</span><span class="o">=</span><span class="n">tools</span><span class="p">,</span>
+    <span class="n">messages</span><span class="o">=</span><span class="n">history</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">final</span><span class="o">.</span><span class="n">content</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+<span class="c1"># &quot;It&#39;s currently 22°C and clear in Tokyo.&quot;</span>
+</code></pre></div>
+
+<p>Notice the pattern: the assistant message carries the tool call; the next user message carries the tool result. The model never sees you "run" the function — it just sees the call followed by the result.</p>
+<h2 id="the-agent-loop">The agent loop</h2>
+<p>Generalize this:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run_agent</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">tools</span><span class="p">,</span> <span class="n">user_message</span><span class="p">,</span> <span class="n">max_iters</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="n">history</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">user_message</span><span class="p">}]</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iters</span><span class="p">):</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">2048</span><span class="p">,</span>
+            <span class="n">system</span><span class="o">=</span><span class="n">system</span><span class="p">,</span> <span class="n">tools</span><span class="o">=</span><span class="n">tools</span><span class="p">,</span> <span class="n">messages</span><span class="o">=</span><span class="n">history</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">history</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;assistant&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="p">})</span>
+        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">stop_reason</span> <span class="o">!=</span> <span class="s2">&quot;tool_use&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">resp</span>
+        <span class="c1"># Execute every tool call in the response</span>
+        <span class="n">tool_results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">block</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;tool_use&quot;</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">TOOL_REGISTRY</span><span class="p">[</span><span class="n">block</span><span class="o">.</span><span class="n">name</span><span class="p">](</span><span class="o">**</span><span class="n">block</span><span class="o">.</span><span class="n">input</span><span class="p">)</span>
+                <span class="n">tool_results</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;tool_result&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;tool_use_id&quot;</span><span class="p">:</span> <span class="n">block</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                    <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="p">),</span>
+                <span class="p">})</span>
+        <span class="n">history</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">tool_results</span><span class="p">})</span>
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Agent didn&#39;t finish within iteration cap.&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>That's an agent in 20 lines. Everything else — memory, planning, evals — is layered on top.</p>
+<h2 id="tips-for-tool-design">Tips for tool design</h2>
+<ul>
+<li><strong>Keep the schema small.</strong> Five parameters is a lot. Fifteen is unmanageable.</li>
+<li><strong>Strong typing in the schema.</strong> Use enums where possible; constrain integers; require fields explicitly. The model honors the schema better when it's tight.</li>
+<li><strong>Idempotent and safe by default.</strong> Tools that have side effects (write to a DB, send a message) deserve extra care. Consider a <code>dry_run</code> parameter or a confirmation step.</li>
+<li><strong>Return structured data when you can.</strong> A dict is easier for the model to reason over than a paragraph of prose.</li>
+</ul>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">Mark as complete</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="02-messages-api-basics.html"><span class="dir">← Previous</span><span class="title">Messages API Basics</span></a>
+          <a class="chapter-nav-next" href="04-streaming.html"><span class="dir">Next →</span><span class="title">Streaming Responses</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">On this page</div>
+        <ul>
+            <li><a href="#the-shape-of-it">The shape of it</a></li>
+            <li><a href="#declaring-a-tool">Declaring a tool</a></li>
+            <li><a href="#the-first-call">The first call</a></li>
+            <li><a href="#running-it-and-continuing">Running it and continuing</a></li>
+            <li><a href="#the-agent-loop">The agent loop</a></li>
+            <li><a href="#tips-for-tool-design">Tips for tool design</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../assets/script.js"></script>
+</body>
+</html>

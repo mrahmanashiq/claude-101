@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workflow Pattern — Claude Code</title>
+  <link rel="stylesheet" href="../../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">ওপেন গাইড · Claude Code</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">লার্ন ক্লড</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../../index.html">হোম</a>
+      <span class="sep">›</span>
+      <a href="index.html">Claude Code</a>
+      <span class="sep">›</span>
+      <span class="current">Workflow Pattern</span>
+    </nav>
+    <a class="lang-toggle" href="../../../courses/claude-code/08-workflow-patterns.html" data-action="set-lang">Read in English</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">কোর্স</span>
+          <a href="index.html">Claude Code</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> সম্পন্ন</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-what-is-claude-code.html"><span class="ch-num">01</span><span class="ch-title">Claude Code কী?</span></a></li>
+            <li class=""><a href="02-your-first-session.html"><span class="ch-num">02</span><span class="ch-title">আপনার প্রথম Session</span></a></li>
+            <li class=""><a href="03-slash-commands.html"><span class="ch-num">03</span><span class="ch-title">Slash Command</span></a></li>
+            <li class=""><a href="04-tools-claude-can-use.html"><span class="ch-num">04</span><span class="ch-title">Claude যেসব Tool ব্যবহার করতে পারে</span></a></li>
+            <li class=""><a href="05-claude-md.html"><span class="ch-num">05</span><span class="ch-title">CLAUDE.md — Project Memory</span></a></li>
+            <li class=""><a href="06-skills-subagents-hooks.html"><span class="ch-num">06</span><span class="ch-title">Skill, Subagent ও Hook</span></a></li>
+            <li class=""><a href="07-mcp-servers.html"><span class="ch-num">07</span><span class="ch-title">MCP Server</span></a></li>
+            <li class="active"><a href="08-workflow-patterns.html" aria-current="page"><span class="ch-num">08</span><span class="ch-title">Workflow Pattern</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Workflow Pattern</h1>
+<p>Claude Code-এর part গুলো জানা এক জিনিস। সেগুলোকে এমন workflow-এ string করা যা actually সময় বাঁচায় — অন্য জিনিস। প্রতিদিন মাসের পর মাস ব্যবহারের পর যেগুলো টিকে থাকে — সেই pattern।</p>
+<h2 id="plan-execute-verify-loop">Plan-execute-verify loop</h2>
+<p>সবচেয়ে reliable single pattern। তিনটা explicit phase:</p>
+<ol>
+<li><strong>Plan.</strong> কোনো code লেখার আগে Claude-কে একটা plan draft করতে বলুন। কোন file বদলাবে, কী test add হবে, কোন edge case matter করে, কী ভুল হতে পারে।</li>
+<li><strong>Execute.</strong> Plan approve করুন, তারপর Claude-কে step by step কাজ করতে দিন।</li>
+<li><strong>Verify.</strong> Claude (বা আপনি বা একটা subagent) test run করুক, type-check করুক, lint করুক, এবং diff-কে plan-এর সাথে মিলিয়ে পড়ুক।</li>
+</ol>
+<p>Trap হলো step 1 skip করা কারণ task "simple feel" করছে। দু-এক file-এর বেশি touch করা যেকোনো কিছুতে, plan লেখা প্রায় সবসময় দুই মিনিট worth।</p>
+<h2 id="small-scoped-task">Small, scoped task</h2>
+<p>বড় task বড় way-তে fail করে না — একসাথে অনেক small way-তে fail করে, যা debug করা harder। কাজকে 30–60 মিনিট agent time-এর chunk-এ ভাঙুন। প্রতিটার পর commit করুন। এখন আপনার history small reviewable diff-এর series, একটা sprawling change না।</p>
+<p>একটা good chunk-এ থাকে:</p>
+<ul>
+<li>Goal describe করা এক বাক্য।</li>
+<li>পরিষ্কার "done" condition (test pass করে, behavior X কাজ করে, screenshot Y ঠিক দেখায়)।</li>
+<li>File-এর একটা estimated scope (Claude 5 file পড়া fine; 50 — আলাদা ধরনের task)।</li>
+</ul>
+<h2 id="branch-">সবসময় একটা branch-এ থাকুন</h2>
+<p>যেকোনো non-trivial change-এর আগে <code>git checkout -b feature/&lt;thing&gt;</code>। এর কোনো cost নেই এবং যেদিন Claude এমন কিছু করে যা রাখতে চান না — সেদিন বাঁচায়। Branch-এর undo button শুধু <code>git checkout main</code>। Main-এ — <code>git reflog</code>-এ একটা সন্ধ্যা।</p>
+<h2 id="claudemd-claudemd">CLAUDE.md পড়ুন, CLAUDE.md লিখুন</h2>
+<p>Project-wide convention-এ Claude-কে correct করার সময় প্রতিবার নিজেকে জিজ্ঞেস করুন: এই correction কি CLAUDE.md material? যদি হয় — add করুন। আপনার future-self এই same project-এ Claude run করবে; এই correction-এর সাথে তাদের জন্য debt pay down করছেন।</p>
+<h2 id="read-heavy-sub-agent">Read-heavy কাজে sub-agent ব্যবহার করুন</h2>
+<p>কোনো কিছু <em>summarize</em> করতে অনেক code পড়া দরকার এমন task — "এই module কী করে?", "এই API-কে যেখানে যেখানে call করি খুঁজে দাও," "আমাদের error handling audit করো" — সেটা textbook subagent job। Main agent-কে সব code context-এ load করতে হয় না; subagent reading করে এবং summary report করে। Context ও money বাঁচান।</p>
+<h2 id="habit-hook-test-run">Habit হিসেবে না, hook হিসেবে test run করুন</h2>
+<p>প্রতিটা change-এর পর "এখন test run করো" type করতে থাকলে — একটা PostToolUse hook setup করুন যা প্রতিটা Edit-এর পর test command run করে। Mechanical step থেকে human-কে loop-এর বাইরে রাখুন। এখন Claude test failure-কে observation cycle-এর অংশ হিসেবে দেখে, এবং interesting কিছু থাকলেই intervene করেন।</p>
+<h2 id="conversation-code-treat">Conversation-কে code হিসেবে treat করুন</h2>
+<p>একটা long Claude session একটা real artifact। সেখানে নেওয়া decision, considered trade-off, follow করা plan — একটা গল্প বলে। দুটো habit সাহায্য করে:</p>
+<ul>
+<li>একটা session non-trivial design decision দিলে — PR description-এ বা design doc-এ summary paste করুন।</li>
+<li>অস্বাভাবিকভাবে ভালো কাজ করেছে এমন একটা prompt পেলে — slash command হিসেবে save করুন।</li>
+</ul>
+<p>Compounding real। ছয় মাসে আপনার এমন slash command ও skill-এর পাহাড় থাকবে যা নতুন task 5× দ্রুত করে।</p>
+<h2 id="bail-out">কখন bail out করবেন</h2>
+<p>কিছু task simply Claude Code-এর জন্য না:</p>
+<ul>
+<li><strong>Massive cross-cutting refactor</strong> এমন codebase-এ যেখানে test coverage poor। Risk surface বড় বেশি।</li>
+<li><strong>Pure visual design কাজ।</strong> Text agent না — একটা design tool ব্যবহার করুন।</li>
+<li><strong>One-line change যেটা ইতিমধ্যে জানেন কীভাবে করতে হবে।</strong> Type করাই দ্রুত।</li>
+</ul>
+<p>কখন editor-এ directly drop করবেন — সেটা recognize করা practice করার skill। Tool good; সব কিছুর answer না।</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">সম্পন্ন হিসেবে চিহ্নিত করুন</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="07-mcp-servers.html"><span class="dir">← পূর্ববর্তী</span><span class="title">MCP Server</span></a>
+          <span class="chapter-nav-next placeholder"></span>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">এই পেজে</div>
+        <ul>
+            <li><a href="#plan-execute-verify-loop">Plan-execute-verify loop</a></li>
+            <li><a href="#small-scoped-task">Small, scoped task</a></li>
+            <li><a href="#সবসময়-একটা-branch-এ-থাকুন">সবসময় একটা branch-এ থাকুন</a></li>
+            <li><a href="#claude-md-পড়ুন-claude-md-লিখুন">CLAUDE.md পড়ুন, CLAUDE.md লিখুন</a></li>
+            <li><a href="#read-heavy-কাজে-sub-agent-ব্যবহার-করুন">Read-heavy কাজে sub-agent ব্যবহার করুন</a></li>
+            <li><a href="#habit-হিসেবে-না-hook-হিসেবে-test-run-করুন">Habit হিসেবে না, hook হিসেবে test run করুন</a></li>
+            <li><a href="#conversation-কে-code-হিসেবে-treat-করুন">Conversation-কে code হিসেবে treat করুন</a></li>
+            <li><a href="#কখন-bail-out-করবেন">কখন bail out করবেন</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../../assets/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Production Readiness — অ্যাডভান্সড প্যাটার্ন</title>
+  <link rel="stylesheet" href="../../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">ওপেন গাইড · অ্যাডভান্সড প্যাটার্ন</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">লার্ন ক্লড</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../../index.html">হোম</a>
+      <span class="sep">›</span>
+      <a href="index.html">অ্যাডভান্সড প্যাটার্ন</a>
+      <span class="sep">›</span>
+      <span class="current">Production Readiness</span>
+    </nav>
+    <a class="lang-toggle" href="../../../courses/advanced-patterns/06-production-readiness.html" data-action="set-lang">Read in English</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">কোর্স</span>
+          <a href="index.html">অ্যাডভান্সড প্যাটার্ন</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> সম্পন্ন</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-agent-loops.html"><span class="ch-num">01</span><span class="ch-title">Agent Loop</span></a></li>
+            <li class=""><a href="02-multi-step-workflows.html"><span class="ch-num">02</span><span class="ch-title">Multi-step Workflow</span></a></li>
+            <li class=""><a href="03-subagent-orchestration.html"><span class="ch-num">03</span><span class="ch-title">Subagent Orchestration</span></a></li>
+            <li class=""><a href="04-building-mcp-servers.html"><span class="ch-num">04</span><span class="ch-title">MCP Server বানানো</span></a></li>
+            <li class=""><a href="05-evaluation-and-testing.html"><span class="ch-num">05</span><span class="ch-title">Evaluation ও Testing</span></a></li>
+            <li class="active"><a href="06-production-readiness.html" aria-current="page"><span class="ch-num">06</span><span class="ch-title">Production Readiness</span></a></li>
+            <li class=""><a href="07-cost-optimization.html"><span class="ch-num">07</span><span class="ch-title">Cost Optimization</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Production Readiness</h1>
+<p>"আমার laptop-এ কাজ করে" থেকে "production-এ user নির্ভর করতে পারে"-তে যাওয়া — নিজেই একটা project। Model easy অংশ। চারপাশের boring infrastructure-ই determine করে আপনার AI feature real traffic-এর সাথে contact-এ survive করবে কিনা।</p>
+<p>এটা একটা checklist, মোটামুটিভাবে যেক্রমে প্রতিটা item নিয়ে ভাবতে হবে।</p>
+<h2 id="pin">সব কিছু pin করুন</h2>
+<ul>
+<li><strong>Model version pin করুন।</strong> <code>claude-latest</code> না। Alias না। Exact ID, একটা config file-এ, কখন update করেছেন তার record সহ।</li>
+<li><strong>SDK version pin করুন।</strong> একই reasoning। Auto-update surprise নামায়।</li>
+<li><strong>Prompt version pin করুন।</strong> Prompt-কে code-এর মতো treat করুন। Versioned file, code-reviewed change, application-এর সাথে deployed।</li>
+</ul>
+<p>"এই request-এর সময় ঠিক কী চলছিল?" — ambiguity ছাড়া answer দিতে পারলে — debug করার একটা chance আছে। নাহলে প্রতিটা incident একটা mystery।</p>
+<h2 id="timeout-retry-limit">Timeout, retry ও limit</h2>
+<ul>
+<li><strong>Per-request timeout set করুন।</strong> Default "চিরকাল wait"। প্রায় প্রতিটা production path-এ ভুল। Synchronous call-এর জন্য 30–60s sensible upper bound।</li>
+<li><strong>Transient failure retry করুন।</strong> 429, 5xx, network blip। SDK-এর reasonable default আছে; আপনার দরকারে tune ও trust করুন।</li>
+<li><strong>চিরকাল retry করবেন না।</strong> Retry cap (সাধারণত 3–5) — যাতে একটা bad day runaway cost event না হয়।</li>
+<li><strong>Per request token budget।</strong> <code>max_tokens</code> set করুন যাতে একটা single response blow up না করতে পারে। Agentic loop-এর জন্য whole loop-এর total token-ও cap করুন।</li>
+</ul>
+<h2 id="observability">Observability</h2>
+<p>পরে ব্যবহার করতে পারেন এমন level-এ log করুন। Minimum:</p>
+<ul>
+<li>Request ID (আপনার, শুধু API-এর না)।</li>
+<li>User ID (বা anonymized session ID)।</li>
+<li>Model used, prompt version, tool list version।</li>
+<li>Input ও output token count। (Default-এ full prompt/response log করবেন না — বড় এবং PII থাকতে পারে।)</li>
+<li>Latency।</li>
+<li>Stop reason, error থাকলে।</li>
+<li>Token count থেকে computed USD cost।</li>
+</ul>
+<p>Dashboard-এ aggregate করুন: P50/P95/P99 latency, error type অনুযায়ী error rate, per user cost, per feature cost, daily volume। কিছু break হলে — মিনিটের মধ্যে জানা উচিত, একদিন পর user complain থেকে না।</p>
+<h2 id="cost-guardrail">Cost guardrail</h2>
+<p>তিন layer-এর protection:</p>
+<ul>
+<li><strong>Per-user rate limit।</strong> একটা misbehaving user আপনাকে bankrupt করবে না। তাদের daily / hourly volume cap করুন।</li>
+<li><strong>Per-request cost cap।</strong> একটা request-এর total token usage budget cross করলে gracefully abort।</li>
+<li><strong>Global circuit breaker।</strong> Total daily spend threshold-এ পৌঁছলে — কাউকে page করুন এবং low-priority traffic refuse করতে শুরু করুন।</li>
+</ul>
+<p>এগুলো often fire করে না। যখন করে — অনেক বাঁচায়।</p>
+<h2 id="safety-content-control">Safety ও content control</h2>
+<p>User-facing feature-এর জন্য:</p>
+<ul>
+<li><strong>Input validation।</strong> Obviously hostile input (prompt injection, malformed payload) edge-এ reject।</li>
+<li><strong>Output filter।</strong> Expose করতে চান না এমন PII strip করুন। Known-bad output pattern block করুন।</li>
+<li><strong>Refusal handling।</strong> Model answer দিতে refuse করলে (কখনো করবে) — একটা graceful fallback রাখুন। Claude-এর refusal text raw expose করবেন না; একটা UI message render করুন।</li>
+<li><strong>Audit-এর জন্য logging।</strong> Regulated industry-এর জন্য — compliance meet করে এমন একটা retention policy লাগতে পারে — পরে bolt on করবেন না।</li>
+</ul>
+<h2 id="caching-strategy">Caching strategy</h2>
+<p>Production-এ prompt caching mandatory, optional না। Stable prefix-যুক্ত যেকোনো feature-এর জন্য:</p>
+<ul>
+<li>Cacheable block mark করুন।</li>
+<li>Usage stat-এ cache hit rate monitor করুন।</li>
+<li>Startup-এ বা traffic spike-এর আগে cache warm করুন।</li>
+</ul>
+<p>Caching থেকে 5–10× cost reduction — feature ship হওয়া বনাম axe পাওয়ার পার্থক্য।</p>
+<h2 id="graceful-degradation">Graceful degradation</h2>
+<p>কী হয় যখন:</p>
+<ul>
+<li>API down? (Last good response cache করুন যেখানে possible; নাহলে একটা clear "পরে চেষ্টা করুন" দেখান।)</li>
+<li>Model slow? (একটা streaming response দেখান যাতে user <em>কিছু</em> দেখে; একটা hard timeout রাখুন যা static reply বা simpler model-এ fall back করে।)</li>
+<li>Tool fail? (Agent loop-এ recover; recovery fail হলে — clean error surface করুন।)</li>
+</ul>
+<p>Launch-এর আগে এই failure mode design করুন। Test করুন। Black Friday-তে discover করবেন না।</p>
+<h2 id="ci-eval-gate">CI-তে eval gate</h2>
+<p>আপনার eval suite (আগের chapter) প্রতিটা PR-এ run হোক যেটা prompt বা model touch করে। Pass rate threshold-এর চেয়ে বেশি drop হলে — PR fail। Silent quality regression-এর বিরুদ্ধে এটাই single best defense।</p>
+<h2 id="rollout">Rollout</h2>
+<p>Model, prompt বা tool change করার সময়:</p>
+<ul>
+<li><strong>প্রথমে traffic-এর একটা ছোট percentage-এ roll out।</strong> Metric — quality, cost, latency — বাকির সাথে compare।</li>
+<li><strong>একটা rollback plan রাখুন।</strong> এটা একটা one-line config change হওয়া উচিত, deploy না।</li>
+<li><strong>User-visible metric দেখুন</strong>, শুধু synthetic না। Conversion rate, support volume, satisfaction score।</li>
+</ul>
+<h2 id="on-call-playbook">On-call playbook</h2>
+<p>আপনি যত failure mode ভাবতে পারেন — প্রতিটার জন্য একটা one-page playbook লিখুন: কী check করতে হবে, কী rollback করতে হবে, কাকে wake up করতে হবে। প্রথমবার একটা LLM-related incident hit করলে — লিখে রেখেছেন বলে খুশি হবেন।</p>
+<hr />
+<p>এটা AI engineering-এর boring অংশ। এটাই demo-কে product থেকে আলাদা করে।</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">সম্পন্ন হিসেবে চিহ্নিত করুন</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="05-evaluation-and-testing.html"><span class="dir">← পূর্ববর্তী</span><span class="title">Evaluation ও Testing</span></a>
+          <a class="chapter-nav-next" href="07-cost-optimization.html"><span class="dir">পরবর্তী →</span><span class="title">Cost Optimization</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">এই পেজে</div>
+        <ul>
+            <li><a href="#সব-কিছু-pin-করুন">সব কিছু pin করুন</a></li>
+            <li><a href="#timeout-retry-ও-limit">Timeout, retry ও limit</a></li>
+            <li><a href="#observability">Observability</a></li>
+            <li><a href="#cost-guardrail">Cost guardrail</a></li>
+            <li><a href="#safety-ও-content-control">Safety ও content control</a></li>
+            <li><a href="#caching-strategy">Caching strategy</a></li>
+            <li><a href="#graceful-degradation">Graceful degradation</a></li>
+            <li><a href="#ci-তে-eval-gate">CI-তে eval gate</a></li>
+            <li><a href="#rollout">Rollout</a></li>
+            <li><a href="#on-call-playbook">On-call playbook</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../../assets/script.js"></script>
+</body>
+</html>

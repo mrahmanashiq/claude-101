@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="{{lang}}" dir="{{dir}}" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{site_name}}</title>
+  <link rel="stylesheet" href="{{base_path}}assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">{{promo_strip_text}}</div>
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">{{site_name}}</span>
+    </a>
+    <nav class="breadcrumb">
+      <span class="current">{{home_label}}</span>
+    </nav>
+    <a class="lang-toggle" href="{{lang_toggle_href}}" data-action="set-lang">{{lang_toggle_label}}</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <main class="home">
+    <section class="home-hero">
+      <h1>{{home_h1}}</h1>
+      <p class="home-lede">{{home_lede}}</p>
+    </section>
+
+    <section class="home-progress" aria-label="Overall progress">
+      <div class="progress-track" aria-hidden="true"><span class="progress-fill"></span></div>
+      <div class="progress-meta">
+        <span class="progress-count"><span class="progress-done">0</span> / <span class="progress-total">{{total_chapters}}</span> {{chapters_complete_label}}</span>
+        <span class="progress-pct">0%</span>
+      </div>
+    </section>
+
+    <section class="course-grid">
+{{course_cards}}
+    </section>
+
+    <footer class="home-footer">
+      <p>{{footer}}</p>
+    </footer>
+  </main>
+
+  <script src="{{base_path}}assets/script.js"></script>
+</body>
+</html>

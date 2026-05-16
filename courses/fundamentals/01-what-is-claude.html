@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is Claude? — Fundamentals</title>
+  <link rel="stylesheet" href="../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">Open Guide · Fundamentals</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">Learn Claude</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="index.html">Fundamentals</a>
+      <span class="sep">›</span>
+      <span class="current">What is Claude?</span>
+    </nav>
+    <a class="lang-toggle" href="../../bn/courses/fundamentals/01-what-is-claude.html" data-action="set-lang">বাংলায় পড়ুন</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">Course</span>
+          <a href="index.html">Fundamentals</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> completed</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class="active"><a href="01-what-is-claude.html" aria-current="page"><span class="ch-num">01</span><span class="ch-title">What is Claude?</span></a></li>
+            <li class=""><a href="02-models-opus-sonnet-haiku.html"><span class="ch-num">02</span><span class="ch-title">Models: Opus, Sonnet, Haiku</span></a></li>
+            <li class=""><a href="03-how-to-talk-to-claude.html"><span class="ch-num">03</span><span class="ch-title">How to Talk to Claude</span></a></li>
+            <li class=""><a href="04-context-windows.html"><span class="ch-num">04</span><span class="ch-title">Context Windows Explained</span></a></li>
+            <li class=""><a href="05-system-prompts-vs-user-prompts.html"><span class="ch-num">05</span><span class="ch-title">System Prompts vs User Prompts</span></a></li>
+            <li class=""><a href="06-reasoning-and-thinking.html"><span class="ch-num">06</span><span class="ch-title">Reasoning, Thinking, and Effort</span></a></li>
+            <li class=""><a href="07-common-pitfalls.html"><span class="ch-num">07</span><span class="ch-title">Common Pitfalls and How to Avoid Them</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>What is Claude?</h1>
+<p>Claude is a family of large language models built by Anthropic. You talk to it in plain language; it talks back in plain language. Under the hood it's a neural network trained to predict text, fine-tuned to follow instructions, refuse harmful requests, and use tools when given the option.</p>
+<p>You can reach Claude in a few different ways, and which one matters depends on what you're building.</p>
+<h2 id="the-three-surfaces">The three surfaces</h2>
+<p>There are three main ways people use Claude today:</p>
+<ul>
+<li><strong>Claude.ai</strong> — the chat interface at claude.ai. Friendly, browser-based, no setup. Good for one-off questions, writing, research, and exploring what the model can do.</li>
+<li><strong>Claude Code</strong> — Anthropic's agentic coding tool. Runs in your terminal or IDE, can read and edit your files, run shell commands, and stay focused on a multi-step task. This is what you want when you're shipping software.</li>
+<li><strong>The Claude API</strong> — the raw HTTP endpoint plus official SDKs (Python, TypeScript, others). This is the foundation. Everything else is built on top of it. Use this when you're building your own product.</li>
+</ul>
+<p>A lot of confusion comes from mixing these up. <em>"Claude added a feature"</em> can mean any of three different things — a new model version, a new Claude Code capability, or a new API parameter. As you learn, train yourself to ask: <em>which surface?</em></p>
+<h2 id="what-a-language-model-actually-does">What a language model actually does</h2>
+<p>A model like Claude takes a sequence of tokens (roughly: word pieces) as input and produces tokens as output, one at a time. That's it. Everything else — chat, tool calling, "thinking," memory, agents — is built on top of that core loop.</p>
+<p>This matters because the model has no internal state between calls. It does not remember your last conversation unless you send the conversation back to it. It does not have access to your files unless you (or the harness around it) put their contents in the prompt. Every capability you see is a careful arrangement of inputs and outputs around that core token-in / token-out loop.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>The fastest way to debug Claude's behavior is to ask: <em>what exactly did the model see as input?</em> Most surprises come from a mismatch between what you think it saw and what was actually in the context.</p>
+</div>
+<h2 id="where-this-guide-will-take-you">Where this guide will take you</h2>
+<p>The rest of this course covers the model itself — sizes, prompting, context, reasoning. Then we'll go surface by surface: Claude Code (terminal agent), the Claude API (your own apps), and advanced patterns once you're past the basics.</p>
+<p>There is no required order, but if this is your first exposure, read the courses in order. Each one assumes you understand the previous.</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">Mark as complete</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <span class="chapter-nav-prev placeholder"></span>
+          <a class="chapter-nav-next" href="02-models-opus-sonnet-haiku.html"><span class="dir">Next →</span><span class="title">Models: Opus, Sonnet, Haiku</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">On this page</div>
+        <ul>
+            <li><a href="#the-three-surfaces">The three surfaces</a></li>
+            <li><a href="#what-a-language-model-actually-does">What a language model actually does</a></li>
+            <li><a href="#where-this-guide-will-take-you">Where this guide will take you</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../assets/script.js"></script>
+</body>
+</html>

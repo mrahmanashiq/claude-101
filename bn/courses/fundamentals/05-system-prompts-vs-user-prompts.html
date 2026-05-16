@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Prompt বনাম User Prompt — মৌলিক বিষয়</title>
+  <link rel="stylesheet" href="../../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">ওপেন গাইড · মৌলিক বিষয়</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">লার্ন ক্লড</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../../index.html">হোম</a>
+      <span class="sep">›</span>
+      <a href="index.html">মৌলিক বিষয়</a>
+      <span class="sep">›</span>
+      <span class="current">System Prompt বনাম User Prompt</span>
+    </nav>
+    <a class="lang-toggle" href="../../../courses/fundamentals/05-system-prompts-vs-user-prompts.html" data-action="set-lang">Read in English</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">কোর্স</span>
+          <a href="index.html">মৌলিক বিষয়</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> সম্পন্ন</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-what-is-claude.html"><span class="ch-num">01</span><span class="ch-title">Claude আসলে কী?</span></a></li>
+            <li class=""><a href="02-models-opus-sonnet-haiku.html"><span class="ch-num">02</span><span class="ch-title">Models: Opus, Sonnet, Haiku</span></a></li>
+            <li class=""><a href="03-how-to-talk-to-claude.html"><span class="ch-num">03</span><span class="ch-title">কীভাবে Claude-এর সাথে কথা বলবেন</span></a></li>
+            <li class=""><a href="04-context-windows.html"><span class="ch-num">04</span><span class="ch-title">Context Window-এর ব্যাখ্যা</span></a></li>
+            <li class="active"><a href="05-system-prompts-vs-user-prompts.html" aria-current="page"><span class="ch-num">05</span><span class="ch-title">System Prompt বনাম User Prompt</span></a></li>
+            <li class=""><a href="06-reasoning-and-thinking.html"><span class="ch-num">06</span><span class="ch-title">Reasoning, Thinking ও Effort</span></a></li>
+            <li class=""><a href="07-common-pitfalls.html"><span class="ch-num">07</span><span class="ch-title">সাধারণ ভুল ও যেভাবে এড়াবেন</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>System Prompt বনাম User Prompt</h1>
+<p>Claude API call করার সময় (বা প্রায় যেকোনো harness দিয়ে Claude-এর সাথে কথা বলার সময়) আপনার দুটো আলাদা slot পূরণ করতে হয়: <strong>system prompt</strong> ও <strong>user message</strong>। দেখতে similar — দুটোই plain text — কিন্তু এদের role আলাদা, এবং এদের ভালোভাবে ব্যবহার করা builder-এর জন্য সহজতম জয়গুলোর একটা।</p>
+<h2 id="_1">কোথায় কী যায়</h2>
+<p>একটা useful line:</p>
+<ul>
+<li><strong>System prompt</strong>: <em>standing orders</em>। এই app-এ Claude কে, কীভাবে behave করবে, কোন rule সবসময় follow করবে, কী কী tool আছে, কী tone-এ কথা বলবে। প্রতিটা call-এ একই থাকে।</li>
+<li><strong>User message</strong>: <em>current request</em>। এই turn-এর specific question, file, বা task। প্রতিবার বদলায়।</li>
+</ul>
+<p>Claude-কে একজন কর্মচারী ভাবলে, system prompt হলো job description plus company handbook। User message হলো এইমাত্র inbox-এ এসে পৌঁছানো email।</p>
+<h2 id="split-matter">এই split কেন matter করে</h2>
+<p>তিনটা কারণ:</p>
+<ol>
+<li><strong>Claude system prompt-কে বেশি ওজন দেয়।</strong> ওখানকার instruction user-এর override করা কঠিন। Safety rule, persona ও structural constraint-এর জন্য এটাই আপনি চান।</li>
+<li><strong>এটা cacheable।</strong> একটা stable system prompt prompt caching-এর perfect target — একবার লেখেন, cache হাজার হাজার call-এ অনেক কম cost-এ reuse করে।</li>
+<li><strong>আপনার code-এ separation of concerns আনে।</strong> System prompt codebase-এ একটা stable template হিসেবে থাকে। User message variable হয়ে flow করে। Request-handling code না ছুঁয়ে persona change করতে পারেন, এবং উল্টোটাও।</li>
+</ol>
+<h2 id="example">Example</h2>
+<p>একটা simple support-assistant skeleton:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">system_prompt</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">You are a support assistant for AcmeBilling, a SaaS billing tool.</span>
+
+<span class="s2">Your job:</span>
+<span class="s2">- Answer the user&#39;s billing question accurately.</span>
+<span class="s2">- If you don&#39;t know, say so and offer to escalate to a human.</span>
+<span class="s2">- Never invent invoice numbers, dates, or amounts.</span>
+<span class="s2">- Keep replies under 200 words unless the user asks for detail.</span>
+
+<span class="s2">You have access to a get_invoice(invoice_id) tool. Use it whenever</span>
+<span class="s2">you need actual invoice data — do not guess.</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="n">user_message</span> <span class="o">=</span> <span class="s2">&quot;৩ মে $49 charge হলো কেন?&quot;</span>
+</code></pre></div>
+
+<p>System prompt প্রতিটা conversation জুড়ে constant থাকবে। User message হবে current customer-এর লেখা যা।</p>
+<h2 id="anti-pattern">Anti-pattern</h2>
+<p>কয়েকটা এড়ানোর জিনিস:</p>
+<ul>
+<li><strong>Current-turn detail দিয়ে system prompt ভরে ফেলা।</strong> Per-call data বদলালে (user-এর account ID, আজকের date, যে invoice সম্পর্কে জিজ্ঞেস করছে) — সেটা user message-এ বা tool result-এ যায়, system prompt-এ না। নাহলে cache fragment হয়ে যায় এবং বেশি pay করতে হয়।</li>
+<li><strong>System prompt empty রাখা।</strong> পারেন, কিন্তু behavior shape করার strongest lever ছেড়ে দিচ্ছেন। তিনটা বাক্যও কিছুই না-থাকার চেয়ে better।</li>
+<li><strong>Instruction শুধু user message-এ লুকানো।</strong> User যা দেখতে পারে, user তার সাথে লড়াই করতে পারে। Safety-critical rule system prompt-এ যায়।</li>
+</ul>
+<h2 id="rule-of-thumb">Rule of thumb</h2>
+<p>এই feature run হলে যা <em>প্রতিবার</em> সত্যি — system prompt-এ। যা শুধু <em>এই specific request-এ</em> সত্যি — user message-এ। এই rule ভাঙার লোভ হলে নিজেকে why জিজ্ঞেস করুন — সাধারণত একটা cleaner split পাবেন।</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">সম্পন্ন হিসেবে চিহ্নিত করুন</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="04-context-windows.html"><span class="dir">← পূর্ববর্তী</span><span class="title">Context Window-এর ব্যাখ্যা</span></a>
+          <a class="chapter-nav-next" href="06-reasoning-and-thinking.html"><span class="dir">পরবর্তী →</span><span class="title">Reasoning, Thinking ও Effort</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">এই পেজে</div>
+        <ul>
+            <li><a href="#কোথায়-কী-যায়">কোথায় কী যায়</a></li>
+            <li><a href="#এই-split-কেন-matter-করে">এই split কেন matter করে</a></li>
+            <li><a href="#example">Example</a></li>
+            <li><a href="#anti-pattern">Anti-pattern</a></li>
+            <li><a href="#rule-of-thumb">Rule of thumb</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../../assets/script.js"></script>
+</body>
+</html>

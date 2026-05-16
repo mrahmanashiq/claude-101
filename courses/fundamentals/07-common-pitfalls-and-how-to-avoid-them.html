@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Common Pitfalls and How to Avoid Them — Fundamentals</title>
+  <link rel="stylesheet" href="../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">Open Guide · Fundamentals</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">Learn<strong>Claude</strong></span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="index.html">Fundamentals</a>
+      <span class="sep">›</span>
+      <span class="current">Common Pitfalls and How to Avoid Them</span>
+    </nav>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">Course</span>
+          <a href="index.html">Fundamentals</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> completed</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-what-is-claude.html"><span class="ch-num">01</span><span class="ch-title">What is Claude?</span></a></li>
+            <li class=""><a href="02-models-opus-sonnet-haiku.html"><span class="ch-num">02</span><span class="ch-title">Models: Opus, Sonnet, Haiku</span></a></li>
+            <li class=""><a href="03-how-to-talk-to-claude.html"><span class="ch-num">03</span><span class="ch-title">How to Talk to Claude</span></a></li>
+            <li class=""><a href="04-context-windows-explained.html"><span class="ch-num">04</span><span class="ch-title">Context Windows Explained</span></a></li>
+            <li class=""><a href="05-system-prompts-vs-user-prompts.html"><span class="ch-num">05</span><span class="ch-title">System Prompts vs User Prompts</span></a></li>
+            <li class=""><a href="06-reasoning-thinking-and-effort.html"><span class="ch-num">06</span><span class="ch-title">Reasoning, Thinking, and Effort</span></a></li>
+            <li class="active"><a href="07-common-pitfalls-and-how-to-avoid-them.html" aria-current="page"><span class="ch-num">07</span><span class="ch-title">Common Pitfalls and How to Avoid Them</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Common Pitfalls and How to Avoid Them</h1>
+<p>A short list of mistakes that show up over and over again, in the order they typically bite. Each one is easy to fix once you know to look for it.</p>
+<h2 id="1-assuming-claude-remembers">1. Assuming Claude remembers</h2>
+<p>Claude has no memory between API calls. None. If you don't send the previous turns back, they don't exist. This sounds obvious but trips up newcomers constantly — they ask "why did Claude forget my earlier instruction?" and the answer is always: because you didn't include it in this call.</p>
+<p>If you want continuity, you (or the harness around you) must pass the conversation history every time. Claude.ai does this for you. Claude Code does this for you. Your own app has to do it explicitly.</p>
+<h2 id="2-confusing-the-surfaces">2. Confusing the surfaces</h2>
+<p>A behavior in Claude.ai isn't necessarily available in the API. A Claude Code feature isn't a model feature — it's a feature of the <em>tool around</em> the model. When you read a blog post or a tweet, ask which surface it's talking about. The distinction matters more than people admit.</p>
+<h2 id="3-trusting-confident-output">3. Trusting confident output</h2>
+<p>A confident-sounding answer is not a correct answer. Language models are trained to be coherent and helpful, and that includes being coherent when they're wrong. The cure is verification: for anything that matters, check the output against a source of truth — run the code, query the database, ask a second model, ask a human.</p>
+<p>The dangerous version of this pitfall is invented facts, sometimes called hallucinations. They show up most often when:</p>
+<ul>
+<li>The question is about a specific, narrow fact (a number, a date, a name).</li>
+<li>The question is in a domain where the model has shallow knowledge.</li>
+<li>The prompt is leading (you implied the answer exists when it doesn't).</li>
+</ul>
+<p>Mitigation: ground the model with real data via tools or retrieval, and tell it explicitly that it's allowed to say "I don't know."</p>
+<h2 id="4-stuffing-the-context">4. Stuffing the context</h2>
+<p>Long context windows tempt people to paste everything they have. Don't. Quality degrades when the model has to wade through pages of barely-relevant material. Be selective. The right reflex is: <em>what is the smallest amount of context this task actually needs?</em></p>
+<h2 id="5-ignoring-temperature-for-the-wrong-tasks">5. Ignoring temperature for the wrong tasks</h2>
+<p>Many SDKs default <code>temperature</code> to around 1.0. For deterministic tasks — extraction, classification, code generation where you want consistency — drop it to 0 or near it. You'll get more stable outputs across runs.</p>
+<p>For creative tasks — brainstorming, writing — leave it higher. Different jobs, different settings.</p>
+<h2 id="6-not-pinning-the-model-version">6. Not pinning the model version</h2>
+<p>Calling <code>claude-latest</code> or letting your SDK default to a moving alias is fine for experimentation. In production, pin to an exact model ID. Otherwise the day a new model ships, your output behavior changes — sometimes for the better, sometimes not, but always without warning.</p>
+<h2 id="7-no-evals-all-vibes">7. No evals, all vibes</h2>
+<p>The number-one predictor of an LLM project succeeding is whether the builder has a small evaluation suite — twenty to a hundred input/expected-output pairs they can run automatically. Without that, every change is guesswork. With it, you can iterate fast and ship confidently.</p>
+<h2 id="8-treating-prompts-like-one-time-write-only-assets">8. Treating prompts like one-time write-only assets</h2>
+<p>A prompt that works today won't necessarily work next quarter. Models change. Use cases evolve. Treat prompts as code: version them, review them, test them. The folder full of <code>.md</code> prompts in your repo is a real artifact, not a scratchpad.</p>
+<hr />
+<p>That's the short list. If you internalize these eight, you'll skip most of the early stumbles and get to interesting problems faster.</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">Mark as complete</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="06-reasoning-thinking-and-effort.html"><span class="dir">← Previous</span><span class="title">Reasoning, Thinking, and Effort</span></a>
+          <span class="chapter-nav-next placeholder"></span>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">On this page</div>
+        <ul>
+            <li><a href="#1-assuming-claude-remembers">1. Assuming Claude remembers</a></li>
+            <li><a href="#2-confusing-the-surfaces">2. Confusing the surfaces</a></li>
+            <li><a href="#3-trusting-confident-output">3. Trusting confident output</a></li>
+            <li><a href="#4-stuffing-the-context">4. Stuffing the context</a></li>
+            <li><a href="#5-ignoring-temperature-for-the-wrong-tasks">5. Ignoring temperature for the wrong tasks</a></li>
+            <li><a href="#6-not-pinning-the-model-version">6. Not pinning the model version</a></li>
+            <li><a href="#7-no-evals-all-vibes">7. No evals, all vibes</a></li>
+            <li><a href="#8-treating-prompts-like-one-time-write-only-assets">8. Treating prompts like one-time write-only assets</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../assets/script.js"></script>
+</body>
+</html>

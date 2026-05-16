@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Loop — অ্যাডভান্সড প্যাটার্ন</title>
+  <link rel="stylesheet" href="../../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">ওপেন গাইড · অ্যাডভান্সড প্যাটার্ন</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">লার্ন ক্লড</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../../index.html">হোম</a>
+      <span class="sep">›</span>
+      <a href="index.html">অ্যাডভান্সড প্যাটার্ন</a>
+      <span class="sep">›</span>
+      <span class="current">Agent Loop</span>
+    </nav>
+    <a class="lang-toggle" href="../../../courses/advanced-patterns/01-agent-loops.html" data-action="set-lang">Read in English</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">কোর্স</span>
+          <a href="index.html">অ্যাডভান্সড প্যাটার্ন</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> সম্পন্ন</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class="active"><a href="01-agent-loops.html" aria-current="page"><span class="ch-num">01</span><span class="ch-title">Agent Loop</span></a></li>
+            <li class=""><a href="02-multi-step-workflows.html"><span class="ch-num">02</span><span class="ch-title">Multi-step Workflow</span></a></li>
+            <li class=""><a href="03-subagent-orchestration.html"><span class="ch-num">03</span><span class="ch-title">Subagent Orchestration</span></a></li>
+            <li class=""><a href="04-building-mcp-servers.html"><span class="ch-num">04</span><span class="ch-title">MCP Server বানানো</span></a></li>
+            <li class=""><a href="05-evaluation-and-testing.html"><span class="ch-num">05</span><span class="ch-title">Evaluation ও Testing</span></a></li>
+            <li class=""><a href="06-production-readiness.html"><span class="ch-num">06</span><span class="ch-title">Production Readiness</span></a></li>
+            <li class=""><a href="07-cost-optimization.html"><span class="ch-num">07</span><span class="ch-title">Cost Optimization</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Agent Loop</h1>
+<p>LLM-এর ভাষায় একটা "agent" হলো একটা loop: model একটা task পায়, পরে কী করবে decide করে, একটা action নেয়, result observe করে, এবং আবার decide করে। Repeat — শেষ না হওয়া পর্যন্ত। ব্যস — agent-এর অন্য কোনো গোপন secret নেই। Loop বুঝলে — বাকি engineering।</p>
+<p>Tool Use chapter-এ bare bones দেখেছি। এটা deeper version: loop কীভাবে design করবেন যাতে robust, observable ও bounded।</p>
+<h2 id="canonical-loop">Canonical loop</h2>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run_agent</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">tools</span><span class="p">,</span> <span class="n">user_task</span><span class="p">,</span> <span class="n">max_iters</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
+    <span class="n">history</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">user_task</span><span class="p">}]</span>
+    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iters</span><span class="p">):</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">,</span>
+            <span class="n">max_tokens</span><span class="o">=</span><span class="mi">2048</span><span class="p">,</span>
+            <span class="n">system</span><span class="o">=</span><span class="n">system</span><span class="p">,</span>
+            <span class="n">tools</span><span class="o">=</span><span class="n">tools</span><span class="p">,</span>
+            <span class="n">messages</span><span class="o">=</span><span class="n">history</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">history</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;assistant&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="p">})</span>
+        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">stop_reason</span> <span class="o">!=</span> <span class="s2">&quot;tool_use&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">resp</span><span class="p">,</span> <span class="n">history</span>
+        <span class="n">tool_results</span> <span class="o">=</span> <span class="n">run_tool_calls</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+        <span class="n">history</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">tool_results</span><span class="p">})</span>
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Hit iteration cap.&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>State machine-এর পাঁচটা honest line। বাকি সব — memory, planning, recovery, eval — এর উপর layer।</p>
+<h2 id="_1">যেসব জিনিস ভুল হয়</h2>
+<p>একটা naive loop predictable-ভাবে fail করে:</p>
+<ul>
+<li><strong>Infinite loop।</strong> Model একটা tool call করতেই থাকে, error পায়, আবার call করে। সবসময় <code>max_iters</code> bound করুন।</li>
+<li><strong>Context bloat।</strong> প্রতিটা turn history বাড়ায়। Eventually prompt এত বড় যে model focus করতে পারে না।</li>
+<li><strong>Cascading error।</strong> একটা bad tool result বাকি run poison করে — model wrong কিছু "জানে" এবং তার উপর act করে।</li>
+<li><strong>Tool flailing।</strong> Model নিশ্চিত না হলে — random-ভাবে tool call করে। Output worse হয়, better না।</li>
+</ul>
+<p>প্রতিটা fixable। কোনোটাই accident না — design problem।</p>
+<h2 id="iteration-token-bound">Iteration ও token bound করা</h2>
+<p>দুটোই সবসময় cap করুন:</p>
+<ul>
+<li><strong>Iteration</strong> — N tool call-এর পর hard stop। Task অনুযায়ী N choose করুন। Simple task: 5। Complex task: 30। Regularly cap hit করলে — task একটা agent-এর জন্য too big; break করুন।</li>
+<li><strong>Total token</strong> — cumulative input/output track করুন। Budget cross করলে abort করুন। Production traffic-এ runaway loop-এর বিরুদ্ধে cheap insurance।</li>
+</ul>
+<h2 id="context-manage">Context manage</h2>
+<p>History long হলে cheapest fix — <strong>summarization</strong>। Periodically <code>history</code>-এর older portion-কে একটা compact summary block দিয়ে replace করুন। Most recent turn verbatim রাখুন — highest signal।</p>
+<p>একটা common scheme: প্রতি K turn-এ — model-কে এ পর্যন্তর conversation কয়েকশ word-এ summarize করতে বলুন। Original turn-গুলোকে summary দিয়ে replace করুন। শেষ 3–5 turn verbatim রাখুন।</p>
+<p>Next-level fix <strong>selective recall</strong>। Conversation history (বা external data) একটা vector store-এ index করুন; দরকার হলেই relevant piece retrieve করুন। বেশি code কিন্তু আরও scale করে।</p>
+<h2 id="recovery">Recovery</h2>
+<p>একটা tool error করলে — error as-is হাতে দিয়ে আশা করবেন না model figure out করবে। Tool call wrap করুন:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">safe_run</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;ok&quot;</span><span class="p">,</span> <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="n">fn</span><span class="p">(</span><span class="o">**</span><span class="n">args</span><span class="p">)}</span>
+    <span class="k">except</span> <span class="n">ValidationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;input_error&quot;</span><span class="p">,</span> <span class="s2">&quot;hint&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)}</span>
+    <span class="k">except</span> <span class="n">ExternalServiceError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;service_error&quot;</span><span class="p">,</span> <span class="s2">&quot;retry_safe&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;detail&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)}</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;internal_error&quot;</span><span class="p">,</span> <span class="s2">&quot;detail&quot;</span><span class="p">:</span> <span class="nb">repr</span><span class="p">(</span><span class="n">e</span><span class="p">)}</span>
+</code></pre></div>
+
+<p>Structured error message model-কে reasoning-এর জন্য কিছু দেয় — opaque stack trace-এর বদলে। Model প্রায়ই automatically অন্য approach try করবে — কিন্তু শুধু error legible হলে।</p>
+<h2 id="observability">Observability</h2>
+<p>প্রতিটা tool call, এর argument, এর result, এবং model-এর response — log করুন। Production-এ এটা দুই কারণে দরকার:</p>
+<ul>
+<li><strong>Debugging।</strong> User complain করলে trace-ই আপনার একমাত্র source of truth।</li>
+<li><strong>Improvement।</strong> Agent কোথায় fail বা waste call করে — সেই pattern পরবর্তী prompt revision-এর highest-signal input।</li>
+</ul>
+<p>Good log format-এ থাকে: session ID, per-turn step number, tool name, argument hash, result size, এবং model-level metadata যেমন stop_reason। High volume-এ প্রতিটা prompt-এর full content log করবেন না — structured summary log, full trace sample করুন।</p>
+<h2 id="_2">কখন থামবেন জানা</h2>
+<p>Loop শেষ হয় যখন:</p>
+<ul>
+<li>Model tool_use block ছাড়া text return করে (done বলে মনে করে)।</li>
+<li>Iteration cap fire করে।</li>
+<li>Token budget cap fire করে।</li>
+<li>Harness-এ একটা hard error।</li>
+</ul>
+<p>Long-running agent-এর জন্য periodically একটা explicit "are we done?" check ভাবুন। Model-কে জিজ্ঞেস করুন: "Stated task complete করেছ? হ্যাঁ হলে যা করেছ summarize করো। না হলে — কী বাকি?" সেই meta-question কখনো ঘণ্টার useless iteration বাঁচায়।</p>
+<h2 id="honest-secret">Honest secret</h2>
+<p>বেশিরভাগ "agent failure" model failure না — loop failure। Bad bounding, bad context management, bad error surface, no observability। Harness ঠিক করুন এবং model অনেক দূর যায় নিজে।</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">সম্পন্ন হিসেবে চিহ্নিত করুন</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <span class="chapter-nav-prev placeholder"></span>
+          <a class="chapter-nav-next" href="02-multi-step-workflows.html"><span class="dir">পরবর্তী →</span><span class="title">Multi-step Workflow</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">এই পেজে</div>
+        <ul>
+            <li><a href="#canonical-loop">Canonical loop</a></li>
+            <li><a href="#যেসব-জিনিস-ভুল-হয়">যেসব জিনিস ভুল হয়</a></li>
+            <li><a href="#iteration-ও-token-bound-করা">Iteration ও token bound করা</a></li>
+            <li><a href="#context-manage">Context manage</a></li>
+            <li><a href="#recovery">Recovery</a></li>
+            <li><a href="#observability">Observability</a></li>
+            <li><a href="#কখন-থামবেন-জানা">কখন থামবেন জানা</a></li>
+            <li><a href="#honest-secret">Honest secret</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../../assets/script.js"></script>
+</body>
+</html>

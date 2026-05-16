@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompt Caching — Claude API &amp; SDK</title>
+  <link rel="stylesheet" href="../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">Open Guide · Claude API &amp; SDK</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">Learn Claude</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="index.html">Claude API &amp; SDK</a>
+      <span class="sep">›</span>
+      <span class="current">Prompt Caching</span>
+    </nav>
+    <a class="lang-toggle" href="../../bn/courses/claude-api/05-prompt-caching.html" data-action="set-lang">বাংলায় পড়ুন</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">Course</span>
+          <a href="index.html">Claude API &amp; SDK</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> completed</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-getting-started.html"><span class="ch-num">01</span><span class="ch-title">Getting Started with the API</span></a></li>
+            <li class=""><a href="02-messages-api-basics.html"><span class="ch-num">02</span><span class="ch-title">Messages API Basics</span></a></li>
+            <li class=""><a href="03-tool-use.html"><span class="ch-num">03</span><span class="ch-title">Tool Use</span></a></li>
+            <li class=""><a href="04-streaming.html"><span class="ch-num">04</span><span class="ch-title">Streaming Responses</span></a></li>
+            <li class="active"><a href="05-prompt-caching.html" aria-current="page"><span class="ch-num">05</span><span class="ch-title">Prompt Caching</span></a></li>
+            <li class=""><a href="06-extended-thinking.html"><span class="ch-num">06</span><span class="ch-title">Extended Thinking</span></a></li>
+            <li class=""><a href="07-files-pdfs-vision.html"><span class="ch-num">07</span><span class="ch-title">Files, PDFs, and Vision</span></a></li>
+            <li class=""><a href="08-batch-and-async.html"><span class="ch-num">08</span><span class="ch-title">Batch and Async</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Prompt Caching</h1>
+<p>Prompt caching is the single highest-impact cost optimization the API offers. When you reuse the same long prefix across many calls — a stable system prompt, an attached document, a set of example shots — the API can store it on the server side and reuse it across calls at a fraction of the per-token rate. The numbers are big enough that ignoring caching, in any application that makes more than a handful of calls, is leaving real money on the table.</p>
+<h2 id="how-it-works">How it works</h2>
+<p>You mark a section of your input as cacheable. The API:</p>
+<ol>
+<li>The first time it sees that exact prefix, charges a <strong>cache write</strong> (slightly more than normal input cost, because it's also storing the result).</li>
+<li>On subsequent calls within the cache TTL, charges a <strong>cache read</strong> (much cheaper — typically around a tenth of the normal input rate).</li>
+<li>If anything before the cache breakpoint changes, the cache miss-fires and you pay full price.</li>
+</ol>
+<p>The cache is keyed by <em>exact bytes</em> up to the breakpoint. Anything below the breakpoint can be different per call.</p>
+<h2 id="setting-it-up">Setting it up</h2>
+<p>You add a <code>cache_control</code> field to the content blocks you want to mark as cacheable. The blocks at and before that point form the cached prefix.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">,</span>
+    <span class="n">max_tokens</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
+    <span class="n">system</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">LONG_SYSTEM_PROMPT</span><span class="p">,</span>
+            <span class="s2">&quot;cache_control&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;ephemeral&quot;</span><span class="p">},</span>
+        <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">current_user_question</span><span class="p">},</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<p>The system prompt above will be cached. Any subsequent request that sends the same exact <code>LONG_SYSTEM_PROMPT</code> will read from cache.</p>
+<h2 id="whats-cacheable">What's cacheable</h2>
+<p>System prompt, message blocks, and tool definitions can all be marked. You get up to a few breakpoints per request, so you can cache <em>layers</em>: tools first, then a long shared doc, then the per-request user turn at the end.</p>
+<h2 id="the-structure-trick">The structure trick</h2>
+<p>The order of your prompt matters. The cache benefits the <strong>prefix</strong>. Anything that changes per call must come <em>after</em> anything that's stable.</p>
+<p>A common, useful layout:</p>
+<div class="codehilite"><pre><span></span><code>[Tools - stable, cached]
+[System prompt - stable, cached]
+[Long reference document - stable, cached]
+[Conversation history so far - mostly stable, last few turns cached]
+[New user turn - not cached]
+</code></pre></div>
+
+<p>If you accidentally put the user's per-turn data in the middle of your prompt, you've broken the cache for everything after it. This is the most common mistake.</p>
+<h2 id="ttl-and-warm-up">TTL and warm-up</h2>
+<p>The default cache TTL is short — typically a few minutes. There's also a longer (1-hour) tier for production workloads with sustained traffic. If your traffic is bursty, the first request after a quiet period pays the cache-write again.</p>
+<p>For latency-critical paths, "warm up" the cache: send a single dummy request shortly before you expect real traffic, and the subsequent requests hit cache cheaply.</p>
+<h2 id="reading-the-usage">Reading the usage</h2>
+<p>The response object reports caching activity:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">resp</span><span class="o">.</span><span class="n">usage</span>
+<span class="c1"># Usage(</span>
+<span class="c1">#     input_tokens=120,             # uncached input this call</span>
+<span class="c1">#     cache_creation_input_tokens=0,</span>
+<span class="c1">#     cache_read_input_tokens=8400, # served from cache</span>
+<span class="c1">#     output_tokens=210,</span>
+<span class="c1"># )</span>
+</code></pre></div>
+
+<p>In a healthy production setup, <code>cache_read_input_tokens</code> will dwarf <code>input_tokens</code> after warm-up. If it doesn't, your cache is missing — investigate.</p>
+<h2 id="when-to-bother">When to bother</h2>
+<p>Caching pays off when:</p>
+<ul>
+<li>You make repeat calls with a long stable prefix.</li>
+<li>That prefix is over ~1,000 tokens (smaller prefixes don't recoup the write overhead).</li>
+<li>Your traffic pattern is dense enough that the TTL doesn't expire between calls.</li>
+</ul>
+<p>Skip it for one-off calls or short prompts. Definitely set it up for: chat apps with system prompts, RAG over a long doc, agent loops with stable tool definitions.</p>
+<h2 id="the-mental-model">The mental model</h2>
+<p>Think of caching as <em>building an inverse function for your call</em>. You stop paying for the same context over and over and start paying mostly for the part that's new. In a well-designed system, the marginal cost per call drops by 5–10× once the cache is warm. That's not a micro-optimization — that's the difference between a feature that ships and a feature that's too expensive to run.</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">Mark as complete</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="04-streaming.html"><span class="dir">← Previous</span><span class="title">Streaming Responses</span></a>
+          <a class="chapter-nav-next" href="06-extended-thinking.html"><span class="dir">Next →</span><span class="title">Extended Thinking</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">On this page</div>
+        <ul>
+            <li><a href="#how-it-works">How it works</a></li>
+            <li><a href="#setting-it-up">Setting it up</a></li>
+            <li><a href="#what-s-cacheable">What&#x27;s cacheable</a></li>
+            <li><a href="#the-structure-trick">The structure trick</a></li>
+            <li><a href="#ttl-and-warm-up">TTL and warm-up</a></li>
+            <li><a href="#reading-the-usage">Reading the usage</a></li>
+            <li><a href="#when-to-bother">When to bother</a></li>
+            <li><a href="#the-mental-model">The mental model</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../assets/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompt Caching — Claude API ও SDK</title>
+  <link rel="stylesheet" href="../../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">ওপেন গাইড · Claude API ও SDK</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">লার্ন ক্লড</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../../index.html">হোম</a>
+      <span class="sep">›</span>
+      <a href="index.html">Claude API ও SDK</a>
+      <span class="sep">›</span>
+      <span class="current">Prompt Caching</span>
+    </nav>
+    <a class="lang-toggle" href="../../../courses/claude-api/05-prompt-caching.html" data-action="set-lang">Read in English</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">কোর্স</span>
+          <a href="index.html">Claude API ও SDK</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> সম্পন্ন</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-getting-started.html"><span class="ch-num">01</span><span class="ch-title">API দিয়ে শুরু</span></a></li>
+            <li class=""><a href="02-messages-api-basics.html"><span class="ch-num">02</span><span class="ch-title">Messages API-এর Basic</span></a></li>
+            <li class=""><a href="03-tool-use.html"><span class="ch-num">03</span><span class="ch-title">Tool Use</span></a></li>
+            <li class=""><a href="04-streaming.html"><span class="ch-num">04</span><span class="ch-title">Streaming Response</span></a></li>
+            <li class="active"><a href="05-prompt-caching.html" aria-current="page"><span class="ch-num">05</span><span class="ch-title">Prompt Caching</span></a></li>
+            <li class=""><a href="06-extended-thinking.html"><span class="ch-num">06</span><span class="ch-title">Extended Thinking</span></a></li>
+            <li class=""><a href="07-files-pdfs-vision.html"><span class="ch-num">07</span><span class="ch-title">File, PDF ও Vision</span></a></li>
+            <li class=""><a href="08-batch-and-async.html"><span class="ch-num">08</span><span class="ch-title">Batch ও Async</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Prompt Caching</h1>
+<p>Prompt caching API-এর single highest-impact cost optimization। অনেক call-এ একই long prefix re-use করার সময় — একটা stable system prompt, একটা attached document, কিছু example shot — API এটা server-side-এ store করতে পারে এবং per-token rate-এর একটা ভগ্নাংশে call জুড়ে reuse করতে পারে। Number-গুলো এত বড় যে — কয়েকটার বেশি call করা যেকোনো application-এ caching ignore করা মানে real টাকা পড়ে থাকতে দেওয়া।</p>
+<h2 id="_1">কীভাবে কাজ করে</h2>
+<p>আপনি input-এর একটা section cacheable হিসেবে mark করেন। API:</p>
+<ol>
+<li>প্রথমবার সেই exact prefix দেখলে — একটা <strong>cache write</strong> charge করে (normal input cost-এর চেয়ে একটু বেশি, কারণ result-ও store করছে)।</li>
+<li>পরের call-গুলোতে cache TTL-এর মধ্যে — একটা <strong>cache read</strong> charge করে (অনেক cheaper — সাধারণত normal input rate-এর প্রায় এক-দশমাংশ)।</li>
+<li>Cache breakpoint-এর আগে কিছু বদলালে — cache miss-fire করে এবং full price pay করেন।</li>
+</ol>
+<p>Cache key হলো breakpoint পর্যন্ত <em>exact byte</em>। Breakpoint-এর নিচে যা — per call আলাদা হতে পারে।</p>
+<h2 id="setup">Setup</h2>
+<p>যে content block cacheable mark করতে চান — সেগুলোতে একটা <code>cache_control</code> field add করেন। সেই point-এ ও আগের block-গুলো cached prefix form করে।</p>
+<div class="codehilite"><pre><span></span><code><span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">,</span>
+    <span class="n">max_tokens</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
+    <span class="n">system</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">LONG_SYSTEM_PROMPT</span><span class="p">,</span>
+            <span class="s2">&quot;cache_control&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;ephemeral&quot;</span><span class="p">},</span>
+        <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">current_user_question</span><span class="p">},</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<p>উপরের system prompt cache হবে। পরবর্তী যেকোনো request যা একই exact <code>LONG_SYSTEM_PROMPT</code> পাঠায় — cache থেকে read করবে।</p>
+<h2 id="cacheable">কী cacheable</h2>
+<p>System prompt, message block, এবং tool definition — সব mark করা যায়। প্রতিটা request-এ কয়েকটা breakpoint পান — তাই <em>layer</em> cache করতে পারেন: প্রথমে tool, তারপর একটা long shared doc, তারপর per-request user turn শেষে।</p>
+<h2 id="structure-trick">Structure trick</h2>
+<p>Prompt-এর order matters। Cache <strong>prefix</strong> কে benefit করে। Per call যা বদলায় — সব stable জিনিসের <em>পরে</em> আসতে হবে।</p>
+<p>একটা common, useful layout:</p>
+<div class="codehilite"><pre><span></span><code>[Tools - stable, cached]
+[System prompt - stable, cached]
+[Long reference document - stable, cached]
+[Conversation history so far - mostly stable, last few turns cached]
+[New user turn - not cached]
+</code></pre></div>
+
+<p>User-এর per-turn data accidentally prompt-এর মাঝে রাখলে — তারপরের সব কিছুর জন্য cache ভেঙে দিয়েছেন। এটাই most common mistake।</p>
+<h2 id="ttl-warm-up">TTL ও warm-up</h2>
+<p>Default cache TTL short — সাধারণত কয়েক মিনিট। একটা longer (1-hour) tier আছে — sustained traffic-এর production workload-এর জন্য। Traffic bursty হলে quiet period-এর পর প্রথম request আবার cache-write pay করে।</p>
+<p>Latency-critical path-এর জন্য cache "warm up" করুন: real traffic শুরুর কিছু আগে একটা single dummy request পাঠান — পরের request-গুলো cheap-ভাবে cache hit করে।</p>
+<h2 id="usage">Usage পড়া</h2>
+<p>Response object caching activity report করে:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">resp</span><span class="o">.</span><span class="n">usage</span>
+<span class="c1"># Usage(</span>
+<span class="c1">#     input_tokens=120,             # এই call-এ uncached input</span>
+<span class="c1">#     cache_creation_input_tokens=0,</span>
+<span class="c1">#     cache_read_input_tokens=8400, # cache থেকে served</span>
+<span class="c1">#     output_tokens=210,</span>
+<span class="c1"># )</span>
+</code></pre></div>
+
+<p>একটা healthy production setup-এ warm-up-এর পর <code>cache_read_input_tokens</code> <code>input_tokens</code>-কে dwarf করবে। না করলে — cache miss হচ্ছে — investigate করুন।</p>
+<h2 id="bother">কখন bother করবেন</h2>
+<p>Caching pay off হয় যখন:</p>
+<ul>
+<li>Long stable prefix-এর সাথে repeat call করছেন।</li>
+<li>সেই prefix ~1,000 token-এর বেশি (smaller prefix write overhead recoup করে না)।</li>
+<li>আপনার traffic pattern এত dense যে TTL call-এর মাঝে expire করে না।</li>
+</ul>
+<p>One-off call বা short prompt-এর জন্য skip করুন। সাবধানে setup করুন: system prompt সহ chat app, long doc-এর উপর RAG, stable tool definition সহ agent loop।</p>
+<h2 id="mental-model">Mental model</h2>
+<p>Caching-কে <em>আপনার call-এর একটা inverse function build করা</em> হিসেবে ভাবুন। একই context-এর জন্য বারবার pay করা বন্ধ করেন, এবং নতুন অংশটার জন্যই mostly pay করেন। Well-designed system-এ cache warm হলে per call marginal cost 5–10× drop করে। এটা micro-optimization না — এটা ship হওয়া feature এবং run করার জন্য বেশি expensive feature-এর মধ্যে পার্থক্য।</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">সম্পন্ন হিসেবে চিহ্নিত করুন</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="04-streaming.html"><span class="dir">← পূর্ববর্তী</span><span class="title">Streaming Response</span></a>
+          <a class="chapter-nav-next" href="06-extended-thinking.html"><span class="dir">পরবর্তী →</span><span class="title">Extended Thinking</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">এই পেজে</div>
+        <ul>
+            <li><a href="#কীভাবে-কাজ-করে">কীভাবে কাজ করে</a></li>
+            <li><a href="#setup">Setup</a></li>
+            <li><a href="#কী-cacheable">কী cacheable</a></li>
+            <li><a href="#structure-trick">Structure trick</a></li>
+            <li><a href="#ttl-ও-warm-up">TTL ও warm-up</a></li>
+            <li><a href="#usage-পড়া">Usage পড়া</a></li>
+            <li><a href="#কখন-bother-করবেন">কখন bother করবেন</a></li>
+            <li><a href="#mental-model">Mental model</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../../assets/script.js"></script>
+</body>
+</html>

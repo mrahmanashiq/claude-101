@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Production Readiness — Advanced Patterns</title>
+  <link rel="stylesheet" href="../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">Open Guide · Advanced Patterns</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">Learn Claude</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="index.html">Advanced Patterns</a>
+      <span class="sep">›</span>
+      <span class="current">Production Readiness</span>
+    </nav>
+    <a class="lang-toggle" href="../../bn/courses/advanced-patterns/06-production-readiness.html" data-action="set-lang">বাংলায় পড়ুন</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">Course</span>
+          <a href="index.html">Advanced Patterns</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> completed</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-agent-loops.html"><span class="ch-num">01</span><span class="ch-title">Agent Loops</span></a></li>
+            <li class=""><a href="02-multi-step-workflows.html"><span class="ch-num">02</span><span class="ch-title">Multi-step Workflows</span></a></li>
+            <li class=""><a href="03-subagent-orchestration.html"><span class="ch-num">03</span><span class="ch-title">Subagent Orchestration</span></a></li>
+            <li class=""><a href="04-building-mcp-servers.html"><span class="ch-num">04</span><span class="ch-title">Building MCP Servers</span></a></li>
+            <li class=""><a href="05-evaluation-and-testing.html"><span class="ch-num">05</span><span class="ch-title">Evaluation and Testing</span></a></li>
+            <li class="active"><a href="06-production-readiness.html" aria-current="page"><span class="ch-num">06</span><span class="ch-title">Production Readiness</span></a></li>
+            <li class=""><a href="07-cost-optimization.html"><span class="ch-num">07</span><span class="ch-title">Cost Optimization</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Production Readiness</h1>
+<p>Going from "it works on my laptop" to "users can rely on it in production" is a project of its own. The model is the easy part. The boring infrastructure around it is what determines whether your AI feature survives contact with real traffic.</p>
+<p>This is a checklist, in roughly the order you'll need to think about each item.</p>
+<h2 id="pin-everything">Pin everything</h2>
+<ul>
+<li><strong>Pin the model version.</strong> Not <code>claude-latest</code>. Not the alias. The exact ID, in a config file, with a record of when you updated it.</li>
+<li><strong>Pin the SDK version.</strong> Same reasoning. Auto-updates land surprises.</li>
+<li><strong>Pin prompt versions.</strong> Treat prompts as code. Versioned files, code-reviewed changes, deployed alongside the application.</li>
+</ul>
+<p>If you can answer "what exactly was running when this request was made?" without ambiguity, you have a chance at debugging. Otherwise, every incident is a mystery.</p>
+<h2 id="timeouts-retries-and-limits">Timeouts, retries, and limits</h2>
+<ul>
+<li><strong>Set per-request timeouts.</strong> The default is "wait forever." That's wrong for almost every production path. 30–60s is a sensible upper bound for synchronous calls.</li>
+<li><strong>Retry transient failures.</strong> 429s, 5xxs, network blips. The SDK has reasonable defaults; tune them to your needs and trust them.</li>
+<li><strong>Don't retry forever.</strong> Cap retries (typically 3–5) so a bad day doesn't become a runaway cost event.</li>
+<li><strong>Token budgets per request.</strong> Set <code>max_tokens</code> so a single response can't blow up. For agentic loops, also cap the total tokens across the whole loop.</li>
+</ul>
+<h2 id="observability">Observability</h2>
+<p>Log at the level you can use later. Minimum:</p>
+<ul>
+<li>Request ID (yours, not just the API's).</li>
+<li>User ID (or anonymized session ID).</li>
+<li>Model used, prompt version, tool list version.</li>
+<li>Input and output token counts. (Don't log full prompts/responses by default — they're large and may contain PII.)</li>
+<li>Latency.</li>
+<li>Stop reason, error if any.</li>
+<li>Cost in USD computed from token counts.</li>
+</ul>
+<p>Aggregate these into dashboards: P50/P95/P99 latency, error rate by error type, cost per user, cost per feature, daily volume. When something breaks, you should know within minutes — not from a user complaining a day later.</p>
+<h2 id="cost-guardrails">Cost guardrails</h2>
+<p>Three layers of protection:</p>
+<ul>
+<li><strong>Per-user rate limits.</strong> A single misbehaving user shouldn't bankrupt you. Cap their daily / hourly volume.</li>
+<li><strong>Per-request cost cap.</strong> If a request's total token usage exceeds your budget, abort gracefully.</li>
+<li><strong>Global circuit breaker.</strong> When the total daily spend hits a threshold, page someone and start refusing low-priority traffic.</li>
+</ul>
+<p>These don't fire often. When they do, they save you a lot.</p>
+<h2 id="safety-and-content-controls">Safety and content controls</h2>
+<p>For user-facing features:</p>
+<ul>
+<li><strong>Input validation.</strong> Reject obviously hostile inputs (prompt injections, malformed payloads) at the edge.</li>
+<li><strong>Output filters.</strong> Strip personally identifiable information you don't want to expose. Block known-bad output patterns.</li>
+<li><strong>Refusal handling.</strong> When the model declines to answer (it sometimes will), have a graceful fallback. Don't expose Claude's refusal text raw; render a UI message.</li>
+<li><strong>Logging for audit.</strong> For regulated industries, you may need a retention policy that meets compliance — don't bolt this on later.</li>
+</ul>
+<h2 id="caching-strategy">Caching strategy</h2>
+<p>In production, prompt caching is mandatory not optional. For any feature with stable prefixes:</p>
+<ul>
+<li>Mark cacheable blocks.</li>
+<li>Monitor cache hit rate in usage stats.</li>
+<li>Warm the cache on startup or before traffic spikes.</li>
+</ul>
+<p>A 5–10× cost reduction from caching is the difference between a feature that ships and one that gets the axe.</p>
+<h2 id="graceful-degradation">Graceful degradation</h2>
+<p>What happens when:</p>
+<ul>
+<li>The API is down? (Cache last good responses where possible; show a clear "try again later" otherwise.)</li>
+<li>The model is slow? (Show a streaming response so users see <em>something</em>; have a hard timeout that falls back to a static reply or a simpler model.)</li>
+<li>A tool fails? (Recover within the agent loop; if recovery fails, surface a clean error.)</li>
+</ul>
+<p>Design these failure modes before launch. Test them. Don't discover them on Black Friday.</p>
+<h2 id="eval-gates-in-ci">Eval gates in CI</h2>
+<p>Your eval suite (previous chapter) should run on every PR that touches a prompt or model. If pass rate drops by more than a threshold, the PR fails. This is the single best defense against silent quality regressions.</p>
+<h2 id="rollouts">Rollouts</h2>
+<p>When you change the model, the prompt, or a tool:</p>
+<ul>
+<li><strong>Roll out to a small percentage of traffic first.</strong> Compare metrics — quality, cost, latency — against the rest.</li>
+<li><strong>Have a rollback plan.</strong> It should be a one-line config change, not a deploy.</li>
+<li><strong>Watch user-visible metrics</strong>, not just synthetic ones. Conversion rate, support volume, satisfaction scores.</li>
+</ul>
+<h2 id="on-call-playbooks">On-call playbooks</h2>
+<p>For every failure mode you can think of, write a one-page playbook: what to check, what to roll back, who to wake up. The first time an LLM-related incident hits, you'll be glad you wrote them.</p>
+<hr />
+<p>This is the boring part of AI engineering. It's also what separates the demos from the products.</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">Mark as complete</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="05-evaluation-and-testing.html"><span class="dir">← Previous</span><span class="title">Evaluation and Testing</span></a>
+          <a class="chapter-nav-next" href="07-cost-optimization.html"><span class="dir">Next →</span><span class="title">Cost Optimization</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">On this page</div>
+        <ul>
+            <li><a href="#pin-everything">Pin everything</a></li>
+            <li><a href="#timeouts-retries-and-limits">Timeouts, retries, and limits</a></li>
+            <li><a href="#observability">Observability</a></li>
+            <li><a href="#cost-guardrails">Cost guardrails</a></li>
+            <li><a href="#safety-and-content-controls">Safety and content controls</a></li>
+            <li><a href="#caching-strategy">Caching strategy</a></li>
+            <li><a href="#graceful-degradation">Graceful degradation</a></li>
+            <li><a href="#eval-gates-in-ci">Eval gates in CI</a></li>
+            <li><a href="#rollouts">Rollouts</a></li>
+            <li><a href="#on-call-playbooks">On-call playbooks</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../assets/script.js"></script>
+</body>
+</html>

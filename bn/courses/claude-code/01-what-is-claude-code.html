@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Code কী? — Claude Code</title>
+  <link rel="stylesheet" href="../../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">ওপেন গাইড · Claude Code</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">লার্ন ক্লড</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../../index.html">হোম</a>
+      <span class="sep">›</span>
+      <a href="index.html">Claude Code</a>
+      <span class="sep">›</span>
+      <span class="current">Claude Code কী?</span>
+    </nav>
+    <a class="lang-toggle" href="../../../courses/claude-code/01-what-is-claude-code.html" data-action="set-lang">Read in English</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">কোর্স</span>
+          <a href="index.html">Claude Code</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> সম্পন্ন</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class="active"><a href="01-what-is-claude-code.html" aria-current="page"><span class="ch-num">01</span><span class="ch-title">Claude Code কী?</span></a></li>
+            <li class=""><a href="02-your-first-session.html"><span class="ch-num">02</span><span class="ch-title">আপনার প্রথম Session</span></a></li>
+            <li class=""><a href="03-slash-commands.html"><span class="ch-num">03</span><span class="ch-title">Slash Command</span></a></li>
+            <li class=""><a href="04-tools-claude-can-use.html"><span class="ch-num">04</span><span class="ch-title">Claude যেসব Tool ব্যবহার করতে পারে</span></a></li>
+            <li class=""><a href="05-claude-md.html"><span class="ch-num">05</span><span class="ch-title">CLAUDE.md — Project Memory</span></a></li>
+            <li class=""><a href="06-skills-subagents-hooks.html"><span class="ch-num">06</span><span class="ch-title">Skill, Subagent ও Hook</span></a></li>
+            <li class=""><a href="07-mcp-servers.html"><span class="ch-num">07</span><span class="ch-title">MCP Server</span></a></li>
+            <li class=""><a href="08-workflow-patterns.html"><span class="ch-num">08</span><span class="ch-title">Workflow Pattern</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Claude Code কী?</h1>
+<p>Claude Code হলো Anthropic-এর coding agent। আপনি terminal-এ (বা IDE-এর ভেতর) এটা run করেন, এবং এটা আপনার codebase-এ এমনভাবে কাজ করে যেভাবে একজন careful collaborator করতেন — file পড়ে, edit করে, command চালায়, result check করে, এবং task শেষ না হওয়া পর্যন্ত continue করে।</p>
+<p>Chat-based coding assistant ব্যবহার করে থাকলে — mental model আলাদা। Chat assistant suggestion দেয়; আপনি copy-paste করে নিজেই run করেন। Claude Code সেই loop টা close করে দেয়। file পড়তে পারে, change make করতে পারে, test run করতে পারে, এবং report করতে পারে।</p>
+<h2 id="matter">কেন matter করে</h2>
+<p>বড় shift হলো <em>snippet-by-snippet help</em> থেকে <em>task-by-task execution</em>-এ। "এই function-টা কীভাবে refactor করব?" জিজ্ঞেস করেন না — বলেন "এই function-কে refactor করো যাতে এটা context manager নেয়," আর Claude করে দেয়। তারপর আপনি diff review করেন।</p>
+<p>এটা আপনার সময় কাটানোর ধরন বদলে দেয়। কম typing, বেশি review। কম mechanical কাজ, বেশি architectural decision। মানুষের attention-এর unit এক level উপরে চলে যায়।</p>
+<h2 id="_1">কোথায় চলে</h2>
+<ul>
+<li><strong>Terminal:</strong> CLI। Project folder open করুন, <code>claude</code> run করুন, কথা শুরু।</li>
+<li><strong>IDE:</strong> VS Code ও JetBrains-এর extension আছে যা editor-এ এটা embed করে।</li>
+<li><strong>Desktop ও web app:</strong> একটা desktop UI আছে, এবং claude.ai/code-এ একটা hosted version।</li>
+</ul>
+<p>সব surface-এই underlying agent একই; শুধু surface আলাদা।</p>
+<h2 id="_2">আসলে কী করতে পারে</h2>
+<p>Out-of-the-box Claude Code পারে:</p>
+<ul>
+<li>Project directory-এর যেকোনো file পড়তে।</li>
+<li>File edit করতে (আগে diff preview, তারপর apply)।</li>
+<li>Shell command run করতে (আপনার permission নিয়ে)।</li>
+<li>Codebase-এ search করতে (grep, glob)।</li>
+<li>URL open করতে ও documentation fetch করতে।</li>
+<li>আপনার configure করা MCP server থেকে tool ব্যবহার করতে।</li>
+<li>কাজ parallelize করতে sub-agent spawn করতে।</li>
+</ul>
+<p>কী allowed সেটা আপনার control-এ। Risky command-এর জন্য confirmation চায়; কী automatically চলবে কী চলবে না — rule configure করতে পারেন।</p>
+<h2 id="_3">যা না</h2>
+<p>Claude Code কোনো magic "build my app" button না। এটা একটা powerful assistant যেটার এখনো — অনেক — সাহায্য লাগে: একটা clear specification, একটা clean codebase, এবং loop-এ একজন human। Vague task দিলে vague result পাবেন। Precise task সঠিক context-এর সাথে দিলে — দ্রুত, আপনি যা চান তার কাছাকাছি কিছু পাবেন।</p>
+<p>এটা model নিজেও না। Claude Code হলো <em>harness</em>: যে layer Claude (model)-কে tool, file access, memory, ও একটা loop-এ act করার ক্ষমতা দেয়। ভেতরে এটা একই API call করছে যা যে কেউ call করতে পারে। Harness-ই এটাকে agentic বানায়।</p>
+<h2 id="_4">পরে কী শিখবেন</h2>
+<p>এই course-এর বাকি অংশে: একটা session শুরু ও manage করা, যে slash command এটাকে steer করে, available tool-গুলো, কীভাবে <code>CLAUDE.md</code> file Claude-কে project context দেয়, এবং higher-level concept — skill, subagent, hook, ও MCP server — যা Claude Code-কে আপনার workflow-এর সাথে tailor করতে দেয়।</p>
+<p>শেষে আপনার vocabulary ও instinct হবে এটা দিয়ে actually ship করার।</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">সম্পন্ন হিসেবে চিহ্নিত করুন</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <span class="chapter-nav-prev placeholder"></span>
+          <a class="chapter-nav-next" href="02-your-first-session.html"><span class="dir">পরবর্তী →</span><span class="title">আপনার প্রথম Session</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">এই পেজে</div>
+        <ul>
+            <li><a href="#কেন-matter-করে">কেন matter করে</a></li>
+            <li><a href="#কোথায়-চলে">কোথায় চলে</a></li>
+            <li><a href="#আসলে-কী-করতে-পারে">আসলে কী করতে পারে</a></li>
+            <li><a href="#যা-না">যা না</a></li>
+            <li><a href="#পরে-কী-শিখবেন">পরে কী শিখবেন</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../../assets/script.js"></script>
+</body>
+</html>

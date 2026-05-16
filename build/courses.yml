@@ -1,0 +1,99 @@
+# Learn Claude — course manifest
+# Source layout: _md/<lang>/<slug>/NN-*.md
+# Each course is built once per language declared below.
+
+languages:
+  - code: en
+    label: English
+    alt_label: বাংলা
+    dir: ltr
+  - code: bn
+    label: বাংলা
+    alt_label: English
+    dir: ltr
+
+courses:
+  - slug: fundamentals
+    order: 1
+    titles:
+      en: Fundamentals
+      bn: মৌলিক বিষয়
+    descriptions:
+      en: Start here. What Claude is, how the models differ, how to prompt well, and the mental model you need before building anything.
+      bn: শুরু এখান থেকে। Claude আসলে কী, মডেলগুলো কীভাবে আলাদা, কীভাবে ভালো prompt লিখবেন, এবং কিছু বানানোর আগে যে মানসিক কাঠামো দরকার।
+
+  - slug: claude-code
+    order: 2
+    titles:
+      en: Claude Code
+      bn: Claude Code
+    descriptions:
+      en: The CLI tool. Sessions, slash commands, tools, CLAUDE.md, skills, subagents, hooks, MCP servers — everything you need to ship with an agentic coding workflow.
+      bn: CLI টুল। Sessions, slash commands, tools, CLAUDE.md, skills, subagents, hooks, MCP servers — agentic coding workflow দিয়ে ship করার জন্য যা যা দরকার।
+
+  - slug: claude-api
+    order: 3
+    titles:
+      en: Claude API & SDK
+      bn: Claude API ও SDK
+    descriptions:
+      en: Build apps with the Claude API. Messages, tool use, streaming, prompt caching, extended thinking, files & vision, and batch.
+      bn: Claude API দিয়ে app বানান। Messages, tool use, streaming, prompt caching, extended thinking, files ও vision, এবং batch।
+
+  - slug: advanced-patterns
+    order: 4
+    titles:
+      en: Advanced Patterns
+      bn: অ্যাডভান্সড প্যাটার্ন
+    descriptions:
+      en: Agent loops, multi-step workflows, subagent orchestration, building your own MCP servers, evals, production readiness, and cost optimization.
+      bn: Agent loops, multi-step workflows, subagent orchestration, নিজের MCP server বানানো, evals, production readiness, এবং cost optimization।
+
+# Site-wide UI strings, per language.
+strings:
+  en:
+    site_name: Learn Claude
+    site_tagline: A practical, open guide
+    home_label: Home
+    course_label: Course
+    chapter_label: Chapter
+    sections_label: sections
+    mark_complete: Mark as complete
+    completed: Completed
+    next: "Next →"
+    previous: "← Previous"
+    on_this_page: On this page
+    no_sections: No sections
+    completed_count: completed
+    chapters_complete: chapters complete
+    start_course: "Start the course →"
+    chapters: chapters
+    promo_open: Open Guide
+    promo_free: free forever
+    home_h1: Learn Claude
+    home_lede_template: "A practical, open guide to Anthropic's Claude — from your first prompt to production agents. {courses} courses · {chapters} chapters."
+    footer: "Original writing. Free to read, share, and remix. Built with markdown and a Python build script."
+    toggle_lang: বাংলায় পড়ুন
+  bn:
+    site_name: লার্ন ক্লড
+    site_tagline: একটি প্রায়োগিক, ওপেন গাইড
+    home_label: হোম
+    course_label: কোর্স
+    chapter_label: অধ্যায়
+    sections_label: সেকশন
+    mark_complete: সম্পন্ন হিসেবে চিহ্নিত করুন
+    completed: সম্পন্ন
+    next: "পরবর্তী →"
+    previous: "← পূর্ববর্তী"
+    on_this_page: এই পেজে
+    no_sections: কোন সেকশন নেই
+    completed_count: সম্পন্ন
+    chapters_complete: অধ্যায় সম্পন্ন
+    start_course: "কোর্স শুরু করুন →"
+    chapters: অধ্যায়
+    promo_open: ওপেন গাইড
+    promo_free: চিরকাল ফ্রি
+    home_h1: লার্ন ক্লড
+    home_lede_template: "Anthropic-এর Claude-এর জন্য একটি প্রায়োগিক, ওপেন গাইড — আপনার প্রথম prompt থেকে production agent পর্যন্ত। {courses}টি কোর্স · {chapters}টি অধ্যায়।"
+    footer: "মূল লেখা। পড়তে, শেয়ার করতে ও remix করতে স্বাধীন। Markdown ও Python build script দিয়ে তৈরি।"
+    toggle_lang: Read in English

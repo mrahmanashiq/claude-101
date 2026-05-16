@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCP Server — Claude Code</title>
+  <link rel="stylesheet" href="../../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">ওপেন গাইড · Claude Code</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">লার্ন ক্লড</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../../index.html">হোম</a>
+      <span class="sep">›</span>
+      <a href="index.html">Claude Code</a>
+      <span class="sep">›</span>
+      <span class="current">MCP Server</span>
+    </nav>
+    <a class="lang-toggle" href="../../../courses/claude-code/07-mcp-servers.html" data-action="set-lang">Read in English</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">কোর্স</span>
+          <a href="index.html">Claude Code</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> সম্পন্ন</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-what-is-claude-code.html"><span class="ch-num">01</span><span class="ch-title">Claude Code কী?</span></a></li>
+            <li class=""><a href="02-your-first-session.html"><span class="ch-num">02</span><span class="ch-title">আপনার প্রথম Session</span></a></li>
+            <li class=""><a href="03-slash-commands.html"><span class="ch-num">03</span><span class="ch-title">Slash Command</span></a></li>
+            <li class=""><a href="04-tools-claude-can-use.html"><span class="ch-num">04</span><span class="ch-title">Claude যেসব Tool ব্যবহার করতে পারে</span></a></li>
+            <li class=""><a href="05-claude-md.html"><span class="ch-num">05</span><span class="ch-title">CLAUDE.md — Project Memory</span></a></li>
+            <li class=""><a href="06-skills-subagents-hooks.html"><span class="ch-num">06</span><span class="ch-title">Skill, Subagent ও Hook</span></a></li>
+            <li class="active"><a href="07-mcp-servers.html" aria-current="page"><span class="ch-num">07</span><span class="ch-title">MCP Server</span></a></li>
+            <li class=""><a href="08-workflow-patterns.html"><span class="ch-num">08</span><span class="ch-title">Workflow Pattern</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>MCP Server</h1>
+<p>MCP — Model Context Protocol — হলো একটা AI agent-এ external tool ও data plug করার জন্য open standard। একটা <strong>MCP server</strong> হলো একটা ছোট program যা capability (এই database পড়, এই issue tracker search করো, এই browser control করো) defined protocol-এর উপর expose করে। Claude Code একটা MCP <em>client</em>; আপনি server-এ point করেন, আর তাদের tool Claude-এর toolset-এ চলে আসে।</p>
+<p>Browser extension install করে থাকলে mental model আছে। প্রতিটা MCP server একটা self-contained add-on। Protocol হলো contract।</p>
+<h2 id="_1">কেন আছে</h2>
+<p>MCP-এর আগে প্রতিটা agent প্রতিটা external service one-off integrate করতে হতো — একটা Postgres tool, একটা Slack tool, একটা Linear tool, প্রতিটা agent-এর জন্য scratch থেকে। এটা scale করে না। MCP-এর সাথে server একবার লেখা হয়, এবং যেকোনো compliant client (Claude Code, Cursor, Cline, Continue, custom agent) এটা ব্যবহার করতে পারে।</p>
+<p>Practically এটার মানে:</p>
+<ul>
+<li>যে service-এ আগ্রহ — তার জন্য একটা community-maintained MCP server install করতে পারেন এবং সরাসরি কাজ করে।</li>
+<li>নিজের internal tool-এর জন্য <em>একটা ছোট MCP server লিখতে পারেন</em> এবং সাথে সাথে agent-এ available করতে পারেন।</li>
+</ul>
+<h2 id="server">একটা server দেখতে কেমন</h2>
+<p>একটা MCP server সাধারণত তিন ধরনের জিনিস expose করে:</p>
+<ul>
+<li><strong>Tools</strong> — function যা agent call করতে পারে (<code>query_database</code>, <code>create_issue</code>, <code>take_screenshot</code>)।</li>
+<li><strong>Resources</strong> — read-only data source (একটা file, database table, docs page) যা agent fetch করতে পারে।</li>
+<li><strong>Prompts</strong> — pre-canned prompt template যা agent request করতে পারে।</li>
+</ul>
+<p>Tool সবচেয়ে common; resource ও prompt কম universally adopted।</p>
+<h2 id="server-add">যে server-গুলো add করতে পারেন</h2>
+<p>কী আছে — কয়েকটা example:</p>
+<ul>
+<li><strong>Database server</strong> — Postgres, MySQL, বা SQLite direct query করুন client code না লিখে।</li>
+<li><strong>Browser server</strong> (যেমন Playwright) — Claude একটা real browser-এ click করতে, type করতে, screenshot নিতে, network traffic পড়তে পারে।</li>
+<li><strong>Issue tracker</strong> — Linear, JIRA, GitHub Issues। Ticket পড়া, create, comment।</li>
+<li><strong>Note system</strong> — Notion, Obsidian, Confluence।</li>
+<li><strong>Cloud SDK</strong> — specific operation-এর জন্য AWS / GCP / Vercel API-এর wrapper।</li>
+</ul>
+<p>MCP server-এর একটা public registry আছে, এবং বেশিরভাগ এক-line install।</p>
+<h2 id="server-configure">Server configure করা</h2>
+<p>Server থাকে <code>claude_desktop_config.json</code> (desktop app) বা <code>.claude/mcp_servers.json</code> (CLI)-এ, surface অনুযায়ী। একটা minimal entry:</p>
+<div class="codehilite"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;mcpServers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;postgres&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;npx&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;args&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;@modelcontextprotocol/server-postgres&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;postgresql://localhost/mydb&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Agent restart করুন (বা reload, surface-এর উপর depend করে) — server-এর tool Claude-এর toolset-এ দেখা দেয়।</p>
+<h2 id="permission-risk">Permission ও risk</h2>
+<p>MCP tool external system-এ call করে। একটা database tool arbitrary SQL run করতে পারে। একটা browser tool যেকোনো URL-এ যেতে পারে। প্রতিটা server-কে এমনভাবে treat করুন যেভাবে একটা CLI agent-কে দিচ্ছেন — minimum credential দিন, এবং harness-এর permission setting দিয়ে কোন tool auto-approve ও কোন prompt-এর জন্য — control করুন।</p>
+<p>বিশেষ করে <strong>write</strong> capability নিয়ে সাবধান (ticket তৈরি, message send, mutation run)। বেশিরভাগ early experiment-এর জন্য, server-কে read-only mode-এ configure করুন এবং agent-এর behavior কিছুদিন watch করার পরই write enable করুন।</p>
+<h2 id="_2">নিজের লেখা</h2>
+<p>Team-এর একটা internal service যদি এখনো MCP server না পেয়ে থাকে — লিখুন। Protocol well-documented এবং Python ও TypeScript SDK আছে। বেশিরভাগ internal server 300 line-এর নিচে code, এবং প্রথমবার "যে customer..." বলে Claude সেটা করে দিলে — নিজেকে ধন্যবাদ দেবেন।</p>
+<p>Advanced Patterns course-এ MCP server বানানো cover করি।</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">সম্পন্ন হিসেবে চিহ্নিত করুন</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="06-skills-subagents-hooks.html"><span class="dir">← পূর্ববর্তী</span><span class="title">Skill, Subagent ও Hook</span></a>
+          <a class="chapter-nav-next" href="08-workflow-patterns.html"><span class="dir">পরবর্তী →</span><span class="title">Workflow Pattern</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">এই পেজে</div>
+        <ul>
+            <li><a href="#কেন-আছে">কেন আছে</a></li>
+            <li><a href="#একটা-server-দেখতে-কেমন">একটা server দেখতে কেমন</a></li>
+            <li><a href="#যে-server-গুলো-add-করতে-পারেন">যে server-গুলো add করতে পারেন</a></li>
+            <li><a href="#server-configure-করা">Server configure করা</a></li>
+            <li><a href="#permission-ও-risk">Permission ও risk</a></li>
+            <li><a href="#নিজের-লেখা">নিজের লেখা</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../../assets/script.js"></script>
+</body>
+</html>

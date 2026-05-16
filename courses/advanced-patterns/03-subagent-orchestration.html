@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subagent Orchestration — Advanced Patterns</title>
+  <link rel="stylesheet" href="../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">Open Guide · Advanced Patterns</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">Learn Claude</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="index.html">Advanced Patterns</a>
+      <span class="sep">›</span>
+      <span class="current">Subagent Orchestration</span>
+    </nav>
+    <a class="lang-toggle" href="../../bn/courses/advanced-patterns/03-subagent-orchestration.html" data-action="set-lang">বাংলায় পড়ুন</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">Course</span>
+          <a href="index.html">Advanced Patterns</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> completed</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-agent-loops.html"><span class="ch-num">01</span><span class="ch-title">Agent Loops</span></a></li>
+            <li class=""><a href="02-multi-step-workflows.html"><span class="ch-num">02</span><span class="ch-title">Multi-step Workflows</span></a></li>
+            <li class="active"><a href="03-subagent-orchestration.html" aria-current="page"><span class="ch-num">03</span><span class="ch-title">Subagent Orchestration</span></a></li>
+            <li class=""><a href="04-building-mcp-servers.html"><span class="ch-num">04</span><span class="ch-title">Building MCP Servers</span></a></li>
+            <li class=""><a href="05-evaluation-and-testing.html"><span class="ch-num">05</span><span class="ch-title">Evaluation and Testing</span></a></li>
+            <li class=""><a href="06-production-readiness.html"><span class="ch-num">06</span><span class="ch-title">Production Readiness</span></a></li>
+            <li class=""><a href="07-cost-optimization.html"><span class="ch-num">07</span><span class="ch-title">Cost Optimization</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Subagent Orchestration</h1>
+<p>A <strong>subagent</strong> is a Claude session spawned by another Claude session to handle a specific chunk of work. The parent gets back a summary of what happened — not the full transcript. This is the most underrated tool in the kit, because it solves a problem that nothing else does well: <strong>context management at scale</strong>.</p>
+<h2 id="the-problem-subagents-solve">The problem subagents solve</h2>
+<p>Your main agent has to do five things to finish a task. Each thing requires reading several files. If the main agent does all five sequentially, by the time it's done it's loaded fifty files into context. Now everything after that is slow and expensive, and quality drops because the prompt is bloated.</p>
+<p>Solution: delegate each "thing" to a subagent. The subagent reads its own files, does its own work, returns a 200-word summary. The main agent absorbs five summaries — clean, focused, cheap.</p>
+<h2 id="when-to-use-one">When to use one</h2>
+<p>A task is a good subagent candidate when it's:</p>
+<ul>
+<li><strong>Self-contained.</strong> A subagent has its own context — it can't easily reference what the parent knows mid-flight.</li>
+<li><strong>Read-heavy.</strong> Audits, summaries, "find all X" tasks. Anything where most of the work is consuming information.</li>
+<li><strong>Independent.</strong> Doesn't depend on what other subagents are doing right now.</li>
+<li><strong>Parallelizable.</strong> Bonus — you can spawn several at once.</li>
+</ul>
+<p>Bad subagent candidates: small one-off tasks (overhead isn't worth it), tightly coupled subtasks (you spend more time passing state than working), anything where the parent really needs the full output not a summary.</p>
+<h2 id="spawning-one">Spawning one</h2>
+<p>In Claude Code, the Task / Agent tool spawns a subagent. In your own API code, it's just another <code>messages.create()</code> call with its own system prompt, its own tools, and its own message history.</p>
+<p>A skeleton:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">spawn_subagent</span><span class="p">(</span><span class="n">task_brief</span><span class="p">,</span> <span class="n">allowed_tools</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">):</span>
+    <span class="n">system</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">You are a focused subagent. Your job is to complete the task below.</span>
+<span class="s2">Return ONLY your final result — no chatter, no commentary on your process.</span>
+
+<span class="s2">Task:</span>
+<span class="si">{</span><span class="n">task_brief</span><span class="si">}</span>
+<span class="s2">&quot;&quot;&quot;</span>
+    <span class="n">resp</span> <span class="o">=</span> <span class="n">run_agent</span><span class="p">(</span>
+        <span class="n">client</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">allowed_tools</span><span class="p">,</span>
+        <span class="n">user_task</span><span class="o">=</span><span class="s2">&quot;Complete the task and return your result.&quot;</span><span class="p">,</span>
+        <span class="n">max_iters</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>   <span class="c1"># the final text block</span>
+</code></pre></div>
+
+<p>The system prompt does a lot of work here. You want a subagent that <em>finishes</em> and returns a clean answer — not one that asks for clarification or rambles.</p>
+<h2 id="briefing-matters">Briefing matters</h2>
+<p>The single biggest determinant of subagent quality is the brief. A subagent has none of the parent's context — it doesn't know your project, your goals, your codebase. Write the brief as if for a stranger who walked in and has to deliver in 20 minutes:</p>
+<ul>
+<li><strong>What</strong> is the task. Be concrete and bounded.</li>
+<li><strong>Why</strong> it matters (one sentence — gives the subagent a sense of what good looks like).</li>
+<li><strong>What you've already ruled out</strong> (saves it from re-doing work).</li>
+<li><strong>Where to look</strong> (paths, search terms, URLs).</li>
+<li><strong>What format</strong> the answer should be in.</li>
+<li><strong>What's out of scope.</strong></li>
+</ul>
+<p>A good brief is a paragraph or two. Half a sentence and you'll get vague results.</p>
+<h2 id="parallel-subagents">Parallel subagents</h2>
+<p>When you have several independent sub-tasks, run them in parallel:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">fan_out</span><span class="p">(</span><span class="n">briefs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="p">(</span>
+        <span class="n">spawn_subagent_async</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="s2">&quot;task&quot;</span><span class="p">],</span> <span class="n">b</span><span class="p">[</span><span class="s2">&quot;tools&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">briefs</span>
+    <span class="p">))</span>
+</code></pre></div>
+
+<p>This is where the win compounds. Five subagents in parallel finish in roughly one subagent's time. Especially nice for "explore N hypotheses, report which one looks best."</p>
+<h2 id="dont-over-decompose">Don't over-decompose</h2>
+<p>The temptation is to break every task into ten subagents. Resist. Subagents have:</p>
+<ul>
+<li>Overhead — spawning, briefing, summarizing all cost tokens.</li>
+<li>Risk — each adds a way to lose the thread.</li>
+</ul>
+<p>A useful rule: spawn a subagent when the cost of the task (in context, tokens, or attention) is <em>more</em> than the cost of the brief and summary. If the task is short, do it inline.</p>
+<h2 id="a-common-pattern-explore-execute">A common pattern: explore + execute</h2>
+<p>A surprisingly powerful template:</p>
+<ol>
+<li><strong>Main agent reads the problem and identifies the work.</strong></li>
+<li><strong>Main agent spawns one or more "explore" subagents</strong> to investigate the codebase / docs / data. Each returns a short report.</li>
+<li><strong>Main agent synthesizes the reports and writes a plan.</strong></li>
+<li><strong>Main agent executes the plan</strong> (or spawns execution subagents per chunk).</li>
+</ol>
+<p>You keep the main agent's context focused on the high-level plan and synthesis, while the deep reading happens in throwaway children. This is, more or less, how a senior engineer delegates to a team.</p>
+<h2 id="watch-the-outputs">Watch the outputs</h2>
+<p>Subagent summaries are great until they're not. A subagent that confidently summarizes "I checked everything, looks fine" is a subagent you should spot-check. For high-stakes work, sample subagent traces (the harness usually saves them) and read the actual interactions, not just the summary. Trust, but verify.</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">Mark as complete</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="02-multi-step-workflows.html"><span class="dir">← Previous</span><span class="title">Multi-step Workflows</span></a>
+          <a class="chapter-nav-next" href="04-building-mcp-servers.html"><span class="dir">Next →</span><span class="title">Building MCP Servers</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">On this page</div>
+        <ul>
+            <li><a href="#the-problem-subagents-solve">The problem subagents solve</a></li>
+            <li><a href="#when-to-use-one">When to use one</a></li>
+            <li><a href="#spawning-one">Spawning one</a></li>
+            <li><a href="#briefing-matters">Briefing matters</a></li>
+            <li><a href="#parallel-subagents">Parallel subagents</a></li>
+            <li><a href="#don-t-over-decompose">Don&#x27;t over-decompose</a></li>
+            <li><a href="#a-common-pattern-explore-execute">A common pattern: explore + execute</a></li>
+            <li><a href="#watch-the-outputs">Watch the outputs</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../assets/script.js"></script>
+</body>
+</html>

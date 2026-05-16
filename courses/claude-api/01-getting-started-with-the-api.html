@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Getting Started with the API — Claude API &amp; SDK</title>
+  <link rel="stylesheet" href="../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">Open Guide · Claude API &amp; SDK</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">Learn<strong>Claude</strong></span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="index.html">Claude API &amp; SDK</a>
+      <span class="sep">›</span>
+      <span class="current">Getting Started with the API</span>
+    </nav>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">Course</span>
+          <a href="index.html">Claude API &amp; SDK</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> completed</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class="active"><a href="01-getting-started-with-the-api.html" aria-current="page"><span class="ch-num">01</span><span class="ch-title">Getting Started with the API</span></a></li>
+            <li class=""><a href="02-messages-api-basics.html"><span class="ch-num">02</span><span class="ch-title">Messages API Basics</span></a></li>
+            <li class=""><a href="03-tool-use.html"><span class="ch-num">03</span><span class="ch-title">Tool Use</span></a></li>
+            <li class=""><a href="04-streaming-responses.html"><span class="ch-num">04</span><span class="ch-title">Streaming Responses</span></a></li>
+            <li class=""><a href="05-prompt-caching.html"><span class="ch-num">05</span><span class="ch-title">Prompt Caching</span></a></li>
+            <li class=""><a href="06-extended-thinking.html"><span class="ch-num">06</span><span class="ch-title">Extended Thinking</span></a></li>
+            <li class=""><a href="07-files-pdfs-and-vision.html"><span class="ch-num">07</span><span class="ch-title">Files, PDFs, and Vision</span></a></li>
+            <li class=""><a href="08-batch-and-async.html"><span class="ch-num">08</span><span class="ch-title">Batch and Async</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Getting Started with the API</h1>
+<p>The Claude API is the foundation everything else sits on. Claude.ai, Claude Code, the desktop app — all of them call it under the hood. Once you can call it yourself, you can build anything those products do, and a lot they don't.</p>
+<h2 id="what-you-need">What you need</h2>
+<p>Three things:</p>
+<ol>
+<li>An <strong>Anthropic account</strong> — sign up at console.anthropic.com.</li>
+<li><strong>API credits</strong> or a paid plan. New accounts get a small amount of free credit to experiment with.</li>
+<li>An <strong>API key</strong>. Generate one in the console. Store it in an environment variable, never in source code.</li>
+</ol>
+<h2 id="pick-an-sdk">Pick an SDK</h2>
+<p>You don't have to use an SDK — the API is plain HTTPS with JSON — but the SDKs make life easier. The two official ones are Python and TypeScript:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># Python</span>
+pip<span class="w"> </span>install<span class="w"> </span>anthropic
+
+<span class="c1"># Node / TypeScript</span>
+npm<span class="w"> </span>install<span class="w"> </span>@anthropic-ai/sdk
+</code></pre></div>
+
+<p>There are community SDKs in Go, Rust, Java, and others. They're mostly thin wrappers around the same endpoints.</p>
+<h2 id="your-first-call">Your first call</h2>
+<p>The hello-world looks like this. Python:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">anthropic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Anthropic</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">Anthropic</span><span class="p">(</span><span class="n">api_key</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;ANTHROPIC_API_KEY&quot;</span><span class="p">])</span>
+
+<span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">,</span>
+    <span class="n">max_tokens</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
+    <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;In one sentence: what is the API?&quot;</span><span class="p">}</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+</code></pre></div>
+
+<p>TypeScript is nearly identical:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nx">Anthropic</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;@anthropic-ai/sdk&quot;</span><span class="p">;</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Anthropic</span><span class="p">();</span><span class="w">  </span><span class="c1">// reads ANTHROPIC_API_KEY from env</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">resp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">client</span><span class="p">.</span><span class="nx">messages</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span>
+<span class="w">  </span><span class="nx">model</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">max_tokens</span><span class="o">:</span><span class="w"> </span><span class="kt">512</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">messages</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="nx">role</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;user&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">content</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;In one sentence: what is the API?&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="p">});</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">resp</span><span class="p">.</span><span class="nx">content</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">text</span><span class="p">);</span>
+</code></pre></div>
+
+<p>That's it. Run it, you get a response. Welcome.</p>
+<h2 id="anatomy-of-a-call">Anatomy of a call</h2>
+<p>A few things to notice:</p>
+<ul>
+<li><strong><code>model</code></strong> — exact model ID. Pin to a specific version in production.</li>
+<li><strong><code>max_tokens</code></strong> — the upper bound on response length. The model may stop short; it cannot exceed.</li>
+<li><strong><code>messages</code></strong> — the conversation as a list. Each message has a <code>role</code> (<code>user</code> or <code>assistant</code>) and <code>content</code>.</li>
+<li>The response <strong><code>content</code></strong> is also a list — not a single string. That's because Claude can return multiple "blocks" in a response (text, tool calls, thinking, images). For a simple text reply you'll have one block of type <code>text</code>.</li>
+</ul>
+<h2 id="environment-hygiene">Environment hygiene</h2>
+<p>Two early habits to lock in:</p>
+<ul>
+<li><strong>API keys in environment variables, never in code.</strong> Even private repos accidentally end up public.</li>
+<li><strong>Don't print full responses in your logs.</strong> They contain user data, and they're expensive to re-read at scale. Log structured fields you actually need.</li>
+</ul>
+<h2 id="cost-awareness-from-day-one">Cost awareness from day one</h2>
+<p>Every call costs money. The console shows a usage dashboard — check it during your first week. You'll see per-model rates and your spend breakdown.</p>
+<p>Two cost levers to know about:</p>
+<ul>
+<li><strong>Cheaper model.</strong> Haiku is much cheaper than Sonnet; Sonnet is much cheaper than Opus. Use the smallest model that does the job.</li>
+<li><strong>Prompt caching.</strong> If you re-use a long prefix (system prompt, document, examples), enable caching to pay a fraction of the rate on the cached part. We have a whole chapter on this.</li>
+</ul>
+<p>That's enough to be dangerous. The next chapter goes deeper into the Messages API and the shape of responses.</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">Mark as complete</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <span class="chapter-nav-prev placeholder"></span>
+          <a class="chapter-nav-next" href="02-messages-api-basics.html"><span class="dir">Next →</span><span class="title">Messages API Basics</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">On this page</div>
+        <ul>
+            <li><a href="#what-you-need">What you need</a></li>
+            <li><a href="#pick-an-sdk">Pick an SDK</a></li>
+            <li><a href="#your-first-call">Your first call</a></li>
+            <li><a href="#anatomy-of-a-call">Anatomy of a call</a></li>
+            <li><a href="#environment-hygiene">Environment hygiene</a></li>
+            <li><a href="#cost-awareness-from-day-one">Cost awareness from day one</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../assets/script.js"></script>
+</body>
+</html>

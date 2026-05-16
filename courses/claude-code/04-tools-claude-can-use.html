@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tools Claude Can Use — Claude Code</title>
+  <link rel="stylesheet" href="../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">Open Guide · Claude Code</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">Learn Claude</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="index.html">Claude Code</a>
+      <span class="sep">›</span>
+      <span class="current">Tools Claude Can Use</span>
+    </nav>
+    <a class="lang-toggle" href="../../bn/courses/claude-code/04-tools-claude-can-use.html" data-action="set-lang">বাংলায় পড়ুন</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">Course</span>
+          <a href="index.html">Claude Code</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> completed</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-what-is-claude-code.html"><span class="ch-num">01</span><span class="ch-title">What is Claude Code?</span></a></li>
+            <li class=""><a href="02-your-first-session.html"><span class="ch-num">02</span><span class="ch-title">Your First Session</span></a></li>
+            <li class=""><a href="03-slash-commands.html"><span class="ch-num">03</span><span class="ch-title">Slash Commands</span></a></li>
+            <li class="active"><a href="04-tools-claude-can-use.html" aria-current="page"><span class="ch-num">04</span><span class="ch-title">Tools Claude Can Use</span></a></li>
+            <li class=""><a href="05-claude-md.html"><span class="ch-num">05</span><span class="ch-title">CLAUDE.md — Project Memory</span></a></li>
+            <li class=""><a href="06-skills-subagents-hooks.html"><span class="ch-num">06</span><span class="ch-title">Skills, Subagents, and Hooks</span></a></li>
+            <li class=""><a href="07-mcp-servers.html"><span class="ch-num">07</span><span class="ch-title">MCP Servers</span></a></li>
+            <li class=""><a href="08-workflow-patterns.html"><span class="ch-num">08</span><span class="ch-title">Workflow Patterns</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Tools Claude Can Use</h1>
+<p>A "tool," in agent land, is a function the model is allowed to call. Claude Code ships with a built-in toolkit — read a file, edit a file, run a shell command, search, fetch a URL, and so on — and that toolkit is what makes it agentic instead of just chatty.</p>
+<p>You don't usually invoke tools yourself. You describe a task in English; Claude decides which tools to call to accomplish it. But understanding the toolset is worth ten minutes of your time, because it tells you what the agent can and can't do, and how to phrase requests so it picks the right one.</p>
+<h2 id="the-core-file-tools">The core file tools</h2>
+<ul>
+<li><strong>Read</strong> — open a file and load it into the conversation. Used constantly.</li>
+<li><strong>Write</strong> — create a new file with given content. Asked for explicitly when starting from scratch.</li>
+<li><strong>Edit</strong> — replace a specific string in an existing file with new content. The workhorse for changes; safer than Write because it requires you to specify the surrounding context.</li>
+<li><strong>Glob</strong> — find files by name pattern (e.g. <code>src/**/*.ts</code>).</li>
+<li><strong>Grep</strong> — search file contents for a regex.</li>
+</ul>
+<p>Most of your sessions are: Glob/Grep to locate, Read to confirm, Edit to change.</p>
+<h2 id="the-shell-tool">The shell tool</h2>
+<ul>
+<li><strong>Bash</strong> (or <strong>PowerShell</strong> on Windows) — run a command in the project directory.</li>
+</ul>
+<p>Shell access is what lets Claude actually verify its work — run tests, type-check, lint, start a dev server. By default risky commands prompt for approval. You can pre-approve safe ones.</p>
+<h2 id="the-web-tools">The web tools</h2>
+<ul>
+<li><strong>WebFetch</strong> — load a URL and read its contents (HTML stripped to text).</li>
+<li><strong>WebSearch</strong> — search the web for relevant pages.</li>
+</ul>
+<p>Useful when Claude needs documentation it doesn't have in its training data — a library version that shipped last week, an API spec on a vendor page.</p>
+<h2 id="the-agent-tool">The agent tool</h2>
+<ul>
+<li><strong>Task</strong> (or <strong>Agent</strong>) — spawn a sub-agent to handle a chunk of work in isolation.</li>
+</ul>
+<p>This is a force multiplier. Instead of doing six things in one conversation and filling up context, Claude can hand a discrete subtask to a sub-agent, let it run, and absorb just the result. Covered in depth in the Advanced Patterns course.</p>
+<h2 id="tools-from-mcp-servers">Tools from MCP servers</h2>
+<p>Beyond the built-in set, you can plug in <strong>MCP servers</strong> — external programs that expose their own tools. There are servers for databases, browsers, JIRA, Notion, GitHub, design tools, you name it. Once a server is configured, its tools appear in Claude's toolset and it can use them in the same loop.</p>
+<p>We cover MCP in its own chapter; for now, just know the toolset is extensible.</p>
+<h2 id="how-claude-picks-a-tool">How Claude picks a tool</h2>
+<p>The model receives a list of available tools and their schemas as part of the prompt. When it decides a tool is needed, it emits a structured tool-call (which tool, with which arguments). The harness runs the call and returns the result, which the model then reads on the next turn.</p>
+<p>The skill of getting Claude to pick the right tool is mostly the same as the skill of clear prompting:</p>
+<ul>
+<li><strong>Name the file.</strong> "Edit <code>src/auth.py</code> to..." is unambiguous. "Edit the auth thing" makes Claude search first, sometimes for the wrong thing.</li>
+<li><strong>State the verb.</strong> "Read", "list", "run", "check" — verbs map cleanly onto tools.</li>
+<li><strong>Limit scope.</strong> "In the <code>tests/</code> folder, find any test using the deprecated mock" tells Claude exactly where to look and which tool to use.</li>
+</ul>
+<p>The more concrete your request, the fewer wrong tool calls Claude makes — and the faster you get to a good answer.</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">Mark as complete</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="03-slash-commands.html"><span class="dir">← Previous</span><span class="title">Slash Commands</span></a>
+          <a class="chapter-nav-next" href="05-claude-md.html"><span class="dir">Next →</span><span class="title">CLAUDE.md — Project Memory</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">On this page</div>
+        <ul>
+            <li><a href="#the-core-file-tools">The core file tools</a></li>
+            <li><a href="#the-shell-tool">The shell tool</a></li>
+            <li><a href="#the-web-tools">The web tools</a></li>
+            <li><a href="#the-agent-tool">The agent tool</a></li>
+            <li><a href="#tools-from-mcp-servers">Tools from MCP servers</a></li>
+            <li><a href="#how-claude-picks-a-tool">How Claude picks a tool</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../assets/script.js"></script>
+</body>
+</html>

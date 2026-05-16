@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skills, Subagents, and Hooks — Claude Code</title>
+  <link rel="stylesheet" href="../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">Open Guide · Claude Code</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">Learn<strong>Claude</strong></span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="index.html">Claude Code</a>
+      <span class="sep">›</span>
+      <span class="current">Skills, Subagents, and Hooks</span>
+    </nav>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">Course</span>
+          <a href="index.html">Claude Code</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> completed</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-what-is-claude-code.html"><span class="ch-num">01</span><span class="ch-title">What is Claude Code?</span></a></li>
+            <li class=""><a href="02-your-first-session.html"><span class="ch-num">02</span><span class="ch-title">Your First Session</span></a></li>
+            <li class=""><a href="03-slash-commands.html"><span class="ch-num">03</span><span class="ch-title">Slash Commands</span></a></li>
+            <li class=""><a href="04-tools-claude-can-use.html"><span class="ch-num">04</span><span class="ch-title">Tools Claude Can Use</span></a></li>
+            <li class=""><a href="05-claude-md-project-memory.html"><span class="ch-num">05</span><span class="ch-title">CLAUDE.md — Project Memory</span></a></li>
+            <li class="active"><a href="06-skills-subagents-and-hooks.html" aria-current="page"><span class="ch-num">06</span><span class="ch-title">Skills, Subagents, and Hooks</span></a></li>
+            <li class=""><a href="07-mcp-servers.html"><span class="ch-num">07</span><span class="ch-title">MCP Servers</span></a></li>
+            <li class=""><a href="08-workflow-patterns.html"><span class="ch-num">08</span><span class="ch-title">Workflow Patterns</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Skills, Subagents, and Hooks</h1>
+<p>Three concepts that look similar at first glance but solve different problems. If you've used Claude Code casually, you may have bumped into them without knowing where each fits. Let's draw the lines clearly.</p>
+<h2 id="skills-focused-expertise-on-demand">Skills: focused expertise on demand</h2>
+<p>A <strong>skill</strong> is a self-contained instruction set — a markdown file plus optional helper scripts — that Claude can invoke when it sees a relevant task. Skills are auto-discovered. You don't have to explicitly call them; the harness loads available skills and Claude picks the ones that apply.</p>
+<p>Example: a <code>pdf-extract</code> skill that knows how to use a particular tool to pull text out of PDFs. When you say "extract the text from this PDF," Claude notices the skill exists and uses it instead of guessing.</p>
+<p>Skills live in <code>~/.claude/skills/&lt;name&gt;/</code> or in a plugin. Each has a <code>SKILL.md</code> describing what it does and when to use it, plus any code or data the skill needs.</p>
+<p>Use a skill when:</p>
+<ul>
+<li>You have a specific kind of task that benefits from specific instructions or helper code.</li>
+<li>The task comes up often enough that re-explaining it each time is wasteful.</li>
+<li>You want it available across many sessions and conversations without thinking about it.</li>
+</ul>
+<h2 id="subagents-handing-off-a-chunk-of-work">Subagents: handing off a chunk of work</h2>
+<p>A <strong>subagent</strong> is a separate Claude session, spawned by the main one, to handle a specific subtask in isolation. It runs in its own context window, with its own (often narrower) tool set, and reports back a single result to the parent.</p>
+<p>The pattern:</p>
+<div class="codehilite"><pre><span></span><code>Main agent: &quot;I need to refactor this 30-file module. First let me
+audit the current state.&quot;
+
+Spawns subagent → &quot;Read every file in src/legacy/, summarize the
+public API surface, return a list of exports and their callers.&quot;
+
+Subagent runs in fresh context, produces a 200-line report.
+
+Main agent reads the report, decides next steps, *without* burning
+the original context on 30 file reads.
+</code></pre></div>
+
+<p>Use a subagent when:</p>
+<ul>
+<li>The subtask is well-scoped and self-contained.</li>
+<li>You want to keep the main context clean and focused.</li>
+<li>The subtask is independent enough to be parallelized (you can spawn several at once).</li>
+</ul>
+<p>Subagents are not magic problem-solvers. They're a context-management technique.</p>
+<h2 id="hooks-code-that-runs-around-tool-calls">Hooks: code that runs around tool calls</h2>
+<p>A <strong>hook</strong> is a shell command the Claude Code harness runs at a specific moment — before a tool call, after a session ends, after a file edit, and so on. Hooks are configured in <code>.claude/settings.json</code> (or your global settings).</p>
+<p>Common uses:</p>
+<ul>
+<li><strong>Lint after every edit.</strong> A <code>PostToolUse</code> hook that runs <code>npm run lint --fix</code> after <code>Edit</code> tool calls.</li>
+<li><strong>Block bad commands.</strong> A <code>PreToolUse</code> hook that refuses <code>Bash</code> calls matching a dangerous pattern.</li>
+<li><strong>Send a notification when a long task finishes.</strong> A <code>Stop</code> hook that pings Slack or rings a bell.</li>
+</ul>
+<p>Hooks are not the model's problem — they're yours, enforced by the harness. The model doesn't choose to run them; the harness does, every time.</p>
+<h2 id="telling-them-apart">Telling them apart</h2>
+<table>
+<thead>
+<tr>
+<th>If you want...</th>
+<th>Use...</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Claude to know how to do X when X comes up</td>
+<td>A skill</td>
+</tr>
+<tr>
+<td>Claude to delegate a chunk of work to keep context clean</td>
+<td>A subagent</td>
+</tr>
+<tr>
+<td>Something to happen automatically around every tool call</td>
+<td>A hook</td>
+</tr>
+</tbody>
+</table>
+<p>A useful sanity check: skills change <em>what Claude can do</em>. Subagents change <em>how Claude allocates context</em>. Hooks change <em>what the harness does around Claude</em>. Three different layers.</p>
+<h2 id="where-to-start">Where to start</h2>
+<p>Start with skills. They're the most user-visible and the easiest payoff. Once you've got a few of those, hooks come next — usually for a single nagging behavior you want enforced. Subagents become useful when you're doing serious agentic work; until then you can ignore them.</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">Mark as complete</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="05-claude-md-project-memory.html"><span class="dir">← Previous</span><span class="title">CLAUDE.md — Project Memory</span></a>
+          <a class="chapter-nav-next" href="07-mcp-servers.html"><span class="dir">Next →</span><span class="title">MCP Servers</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">On this page</div>
+        <ul>
+            <li><a href="#skills-focused-expertise-on-demand">Skills: focused expertise on demand</a></li>
+            <li><a href="#subagents-handing-off-a-chunk-of-work">Subagents: handing off a chunk of work</a></li>
+            <li><a href="#hooks-code-that-runs-around-tool-calls">Hooks: code that runs around tool calls</a></li>
+            <li><a href="#telling-them-apart">Telling them apart</a></li>
+            <li><a href="#where-to-start">Where to start</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../assets/script.js"></script>
+</body>
+</html>

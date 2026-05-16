@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCP Server বানানো — অ্যাডভান্সড প্যাটার্ন</title>
+  <link rel="stylesheet" href="../../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">ওপেন গাইড · অ্যাডভান্সড প্যাটার্ন</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">লার্ন ক্লড</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../../index.html">হোম</a>
+      <span class="sep">›</span>
+      <a href="index.html">অ্যাডভান্সড প্যাটার্ন</a>
+      <span class="sep">›</span>
+      <span class="current">MCP Server বানানো</span>
+    </nav>
+    <a class="lang-toggle" href="../../../courses/advanced-patterns/04-building-mcp-servers.html" data-action="set-lang">Read in English</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">কোর্স</span>
+          <a href="index.html">অ্যাডভান্সড প্যাটার্ন</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> সম্পন্ন</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-agent-loops.html"><span class="ch-num">01</span><span class="ch-title">Agent Loop</span></a></li>
+            <li class=""><a href="02-multi-step-workflows.html"><span class="ch-num">02</span><span class="ch-title">Multi-step Workflow</span></a></li>
+            <li class=""><a href="03-subagent-orchestration.html"><span class="ch-num">03</span><span class="ch-title">Subagent Orchestration</span></a></li>
+            <li class="active"><a href="04-building-mcp-servers.html" aria-current="page"><span class="ch-num">04</span><span class="ch-title">MCP Server বানানো</span></a></li>
+            <li class=""><a href="05-evaluation-and-testing.html"><span class="ch-num">05</span><span class="ch-title">Evaluation ও Testing</span></a></li>
+            <li class=""><a href="06-production-readiness.html"><span class="ch-num">06</span><span class="ch-title">Production Readiness</span></a></li>
+            <li class=""><a href="07-cost-optimization.html"><span class="ch-num">07</span><span class="ch-title">Cost Optimization</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>MCP Server বানানো</h1>
+<p>আপনার দরকারি MCP server না থাকলে — লিখুন। Protocol well-specified, SDK friendly, এবং একটা useful server সাধারণত কয়েকশ line code। একটা লিখলে — clean tool design-এর forcing function হয়, এবং একটা লিখার পর পুরো agent ecosystem better বুঝবেন।</p>
+<h2 id="_1">কী বানাচ্ছেন</h2>
+<p>একটা MCP server হলো একটা ছোট program। MCP protocol-এ কথা বলে — stdio-এর উপর (most common) বা HTTP+SSE। Expose করে:</p>
+<ul>
+<li><strong>Tools</strong> — callable function, schema সহ, যা agent invoke করে।</li>
+<li><strong>Resources</strong> — read-only data source যা agent URI দিয়ে fetch করতে পারে।</li>
+<li><strong>Prompts</strong> — optional prompt template যা agent request করতে পারে।</li>
+</ul>
+<p>বেশিরভাগ server-এর জন্য tool 90% value। সেখান থেকে শুরু; resource ও prompt যদি fit করে তবেই add করুন।</p>
+<h2 id="python-minimum-server">Python-এ একটা minimum server</h2>
+<p>Python SDK <code>mcp</code>। একটা minimal stdio server:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">mcp.server</span><span class="w"> </span><span class="kn">import</span> <span class="n">Server</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mcp.server.stdio</span><span class="w"> </span><span class="kn">import</span> <span class="n">stdio_server</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mcp.types</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">t</span>
+
+<span class="n">server</span> <span class="o">=</span> <span class="n">Server</span><span class="p">(</span><span class="s2">&quot;my-server&quot;</span><span class="p">)</span>
+
+<span class="nd">@server</span><span class="o">.</span><span class="n">list_tools</span><span class="p">()</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_tools</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Tool</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">t</span><span class="o">.</span><span class="n">Tool</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;add&quot;</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Add two numbers and return the sum.&quot;</span><span class="p">,</span>
+            <span class="n">inputSchema</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">},</span>
+                    <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">},</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">],</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+    <span class="p">]</span>
+
+<span class="nd">@server</span><span class="o">.</span><span class="n">call_tool</span><span class="p">()</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">call_tool</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">arguments</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;add&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">TextContent</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">arguments</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">arguments</span><span class="p">[</span><span class="s2">&quot;b&quot;</span><span class="p">]))]</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown tool: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">stdio_server</span><span class="p">()</span> <span class="k">as</span> <span class="p">(</span><span class="n">read</span><span class="p">,</span> <span class="n">write</span><span class="p">):</span>
+        <span class="k">await</span> <span class="n">server</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">read</span><span class="p">,</span> <span class="n">write</span><span class="p">,</span> <span class="n">server</span><span class="o">.</span><span class="n">create_initialization_options</span><span class="p">())</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+    <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</code></pre></div>
+
+<p>এটা একটা fully working MCP server। Script path একটা Claude Code config-এ drop করুন — সাথে সাথে available।</p>
+<h2 id="tool-design-principle">Tool design principle</h2>
+<p>Useful tool — good function signature-এর মতো rule follow করে:</p>
+<ul>
+<li><strong>Name ও description।</strong> Unambiguous হোন। <code>query_db</code> fine; <code>q</code> না। Description-ই Claude পড়ে decide করতে — tool apply কিনা। Code-review audience-এর জন্য না, model-এর জন্য লিখুন।</li>
+<li><strong>Tight schema।</strong> Value constrain করতে <code>enum</code> ব্যবহার করুন। Mandatory field-এ <code>required</code>। Schema যত narrow — Claude তত কম wrong call করে।</li>
+<li><strong>Small surface।</strong> পাঁচটা well-designed tool পনেরোটা mediocre-কে হারায়। Server-এ 30টা tool থাকলে — agent confuse করবে কোনটা pick করবে।</li>
+<li><strong>Idempotence যেখানে possible।</strong> Easy retry, fewer surprise।</li>
+<li><strong>Structured return।</strong> Model parse করতে পারে এমন JSON বা compact text return করুন। Free-form paragraph এড়ান — যদি না একটা generate করাই <em>whole point</em>।</li>
+</ul>
+<h2 id="error">Error</h2>
+<p>একটা tool fail করলে — exception trace না, একটা <em>structured error</em> return করুন। Model একটা clear error message-এর উপর reason করতে পারে ও different কিছু try করতে পারে; একটা Python stack dump-এর উপর পারে না।</p>
+<div class="codehilite"><pre><span></span><code><span class="k">return</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">TextContent</span><span class="p">(</span>
+    <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span><span class="p">,</span>
+    <span class="n">text</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span>
+        <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;row_not_found&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;detail&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;No row matched id=</span><span class="si">{</span><span class="n">row_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;hint&quot;</span><span class="p">:</span> <span class="s2">&quot;Use list_ids() to see valid options.&quot;</span><span class="p">,</span>
+    <span class="p">}),</span>
+<span class="p">)]</span>
+</code></pre></div>
+
+<p><code>hint</code> field gold — retry loop না লিখে model-কে productive recovery-এর দিকে nudge করে।</p>
+<h2 id="permission-side-effect">Permission ও side effect</h2>
+<p>MCP server-কে production code হিসেবে treat করুন। Side effect-যুক্ত যেকোনো কিছু (database write, API mutation, file system change) দরকার:</p>
+<ul>
+<li>Default-এ একটা <strong>read-only mode</strong>। Write explicitly opt in হলেই add।</li>
+<li>Destructive operation-এর জন্য <strong>confirmation hook</strong>। Client (Claude Code) user-কে confirmation surface করবে।</li>
+<li><strong>Scoped credential।</strong> "Just in case" admin-level access দেবেন না। যে narrowest permission কাজ করে দেন।</li>
+</ul>
+<h2 id="distribution">Distribution</h2>
+<p>Kaj করলে distribute করুন। Option:</p>
+<ul>
+<li><strong>Local-only script।</strong> Personal tooling-এর জন্য fine। Config-এ path, ব্যস।</li>
+<li><strong>npm বা PyPI package।</strong> Others-কে one command-এ install করতে দেয়।</li>
+<li><strong>Public registry।</strong> MCP server-এর একটা directory আছে; general-purpose হলে submit করুন।</li>
+</ul>
+<p>Well-designed server যে client-এর জন্য built — তাকে outlive করে, কারণ protocol portable। আজ Claude Code-এর জন্য লেখা server দু বছর পর এমন কিছু ব্যবহার করতে পারে যেটা এখনো exist করে না।</p>
+<h2 id="watch">Watch করার জিনিস</h2>
+<ul>
+<li><strong>Schema drift।</strong> একটা tool-এর schema change করলে — যেসব agent পুরোনো shape শিখেছে তারা misbehave করবে। Tool name version করুন (<code>query_v2</code>) বা একটা deprecation window-এর জন্য পুরোনো shape accept করুন।</li>
+<li><strong>Long operation।</strong> 30 second-এর tool call agent block করে। Long কাজের জন্য — সাথে সাথে একটা job ID return করুন এবং একটা <code>poll_job</code> tool offer করুন status check করতে।</li>
+<li><strong>Streaming।</strong> কিছু server long-running tool expose করে যা partial result stream করে। Protocol support করে; SDK helper-ও করে। Large dataset scan করা tool-এর জন্য useful।</li>
+</ul>
+<p>প্রথম server লেখা hardest। চতুর্থটা fun। ততক্ষণে আপনি আপনার codebase, service, এমনকি team-এর process — সব potential MCP surface হিসেবে দেখবেন — এবং right হবেন।</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">সম্পন্ন হিসেবে চিহ্নিত করুন</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="03-subagent-orchestration.html"><span class="dir">← পূর্ববর্তী</span><span class="title">Subagent Orchestration</span></a>
+          <a class="chapter-nav-next" href="05-evaluation-and-testing.html"><span class="dir">পরবর্তী →</span><span class="title">Evaluation ও Testing</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">এই পেজে</div>
+        <ul>
+            <li><a href="#কী-বানাচ্ছেন">কী বানাচ্ছেন</a></li>
+            <li><a href="#python-এ-একটা-minimum-server">Python-এ একটা minimum server</a></li>
+            <li><a href="#tool-design-principle">Tool design principle</a></li>
+            <li><a href="#error">Error</a></li>
+            <li><a href="#permission-ও-side-effect">Permission ও side effect</a></li>
+            <li><a href="#distribution">Distribution</a></li>
+            <li><a href="#watch-করার-জিনিস">Watch করার জিনিস</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../../assets/script.js"></script>
+</body>
+</html>

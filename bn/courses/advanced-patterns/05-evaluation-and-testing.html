@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Evaluation ও Testing — অ্যাডভান্সড প্যাটার্ন</title>
+  <link rel="stylesheet" href="../../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">ওপেন গাইড · অ্যাডভান্সড প্যাটার্ন</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">লার্ন ক্লড</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../../index.html">হোম</a>
+      <span class="sep">›</span>
+      <a href="index.html">অ্যাডভান্সড প্যাটার্ন</a>
+      <span class="sep">›</span>
+      <span class="current">Evaluation ও Testing</span>
+    </nav>
+    <a class="lang-toggle" href="../../../courses/advanced-patterns/05-evaluation-and-testing.html" data-action="set-lang">Read in English</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">কোর্স</span>
+          <a href="index.html">অ্যাডভান্সড প্যাটার্ন</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> সম্পন্ন</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-agent-loops.html"><span class="ch-num">01</span><span class="ch-title">Agent Loop</span></a></li>
+            <li class=""><a href="02-multi-step-workflows.html"><span class="ch-num">02</span><span class="ch-title">Multi-step Workflow</span></a></li>
+            <li class=""><a href="03-subagent-orchestration.html"><span class="ch-num">03</span><span class="ch-title">Subagent Orchestration</span></a></li>
+            <li class=""><a href="04-building-mcp-servers.html"><span class="ch-num">04</span><span class="ch-title">MCP Server বানানো</span></a></li>
+            <li class="active"><a href="05-evaluation-and-testing.html" aria-current="page"><span class="ch-num">05</span><span class="ch-title">Evaluation ও Testing</span></a></li>
+            <li class=""><a href="06-production-readiness.html"><span class="ch-num">06</span><span class="ch-title">Production Readiness</span></a></li>
+            <li class=""><a href="07-cost-optimization.html"><span class="ch-num">07</span><span class="ch-title">Cost Optimization</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Evaluation ও Testing</h1>
+<p>Eval ছাড়া — আপনার LLM system-এ প্রতিটা change guesswork। Eval সহ — fast iterate ও confidently ship করতে পারেন। এই দুই state-এর মাঝে gap বিশাল, এবং বেশিরভাগ project কখনো close করে না কারণ তারা ভাবে eval exotic। না। দুপুরের মধ্যে একটা useful eval suite হতে পারে।</p>
+<h2 id="eval">একটা eval আসলে কী</h2>
+<p>Eval হলো আপনার LLM-using code-এর জন্য একটা test case-এর set। প্রতিটা case-এ:</p>
+<ul>
+<li><strong>একটা input</strong> — production-এ system-কে যে prompt বা request দিতেন।</li>
+<li><strong>একটা expected outcome</strong> — "good" কেমন দেখায়। কখনো exact, কখনো একটা rubric, কখনো "X include করে না"।</li>
+<li><strong>Score করার একটা উপায়</strong> — actual output expectation-এর সাথে।</li>
+</ul>
+<p>মূলত deterministic না এমন জিনিসের unit testing। Scoring-এ যা আলাদা।</p>
+<h2 id="effort-order-scoring-strategy">Effort-এর order-এ scoring strategy</h2>
+<p><strong>Exact match।</strong> যেখানে পারেন। Classifier, extractor, structured output-এর জন্য — expected output <code>"billing"</code> ও model বলে <code>"billing"</code>, pass। Cheapest, sharpest signal। যেখানে possible এটাই ব্যবহার করুন।</p>
+<p><strong>Substring / regex match।</strong> Output-এ known marker থাকলে। "Reply-এ order ID থাকতে হবে।" "Reply-এ user-এর email থাকবে না।" Coarse কিন্তু useful।</p>
+<p><strong>Structural check।</strong> JSON output-এর জন্য: parse হলো? Required field ছিল? Field value constraint-এর মধ্যে? Easy code, generation regression-এর বেশিরভাগ catch।</p>
+<p><strong>আরেকটা LLM দিয়ে rubric scoring।</strong> Right answer fuzzy হলে। দ্বিতীয় Claude call-কে input, actual output, ও rubric দিন: "এই dimension-গুলোতে 1–5 rate করো, ব্যাখ্যা দাও।" Slower এবং noisier, কিন্তু "এই reply কি polite" বা "এই code আমাদের style follow করে" এমন কিছু eval করতে দেয়।</p>
+<p><strong>Human review।</strong> Gold standard, most expensive। High-stakes 10% case-এর জন্য বা periodic spot check-এর জন্য রাখুন।</p>
+<p>পাঁচটাই mix করবেন। বেশিরভাগ well-run eval 70% structural / exact match ও 30% rubric, occasionally human sample সহ।</p>
+<h2 id="eval_1">প্রথম eval বানানো</h2>
+<p>Small শুরু করুন। বিশটা case ship করার জন্য যথেষ্ট। পঞ্চাশটা confident feel-এর জন্য। একশো অনেক।</p>
+<div class="codehilite"><pre><span></span><code><span class="n">cases</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="s2">&quot;Order 4382-এর refund চাই&quot;</span><span class="p">,</span> <span class="s2">&quot;expect&quot;</span><span class="p">:</span> <span class="s2">&quot;billing&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="s2">&quot;আমার data কীভাবে export করব?&quot;</span><span class="p">,</span> <span class="s2">&quot;expect&quot;</span><span class="p">:</span> <span class="s2">&quot;general&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="s2">&quot;Invoice $99 কিন্তু আমার plan-এ $89 দেখাচ্ছে&quot;</span><span class="p">,</span> <span class="s2">&quot;expect&quot;</span><span class="p">:</span> <span class="s2">&quot;billing&quot;</span><span class="p">},</span>
+    <span class="c1"># ... আরো 17টা ...</span>
+<span class="p">]</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">run_eval</span><span class="p">(</span><span class="n">case</span><span class="p">):</span>
+    <span class="n">actual</span> <span class="o">=</span> <span class="n">classify_intent</span><span class="p">(</span><span class="n">case</span><span class="p">[</span><span class="s2">&quot;input&quot;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="n">case</span><span class="p">[</span><span class="s2">&quot;input&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;expected&quot;</span><span class="p">:</span> <span class="n">case</span><span class="p">[</span><span class="s2">&quot;expect&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;actual&quot;</span><span class="p">:</span> <span class="n">actual</span><span class="p">,</span>
+        <span class="s2">&quot;passed&quot;</span><span class="p">:</span> <span class="n">actual</span> <span class="o">==</span> <span class="n">case</span><span class="p">[</span><span class="s2">&quot;expect&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">run_eval</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cases</span><span class="p">]</span>
+<span class="n">pass_rate</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s2">&quot;passed&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Pass rate: </span><span class="si">{</span><span class="n">pass_rate</span><span class="si">:</span><span class="s2">.0%</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="p">[</span><span class="s2">&quot;passed&quot;</span><span class="p">]:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FAIL: </span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">]</span><span class="si">!r}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;actual&#39;</span><span class="p">]</span><span class="si">!r}</span><span class="s2"> (expected </span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">&#39;expected&#39;</span><span class="p">]</span><span class="si">!r}</span><span class="s2">)&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>এটা একটা real eval। আজই বলে দেবে — আপনার classifier গত সপ্তাহের তুলনায় regress করেছে কিনা। বেশিরভাগ project এটাই কখনো লেখে না।</p>
+<h2 id="case">Case কোথা থেকে আসে</h2>
+<p>Best source: real production data। Failed session, edge case, customer complaint sample করুন। Anonymize করে suite-এ add করুন। কয়েক মাস পর — actual user reflect করে এমন eval set হবে, আপনার imagine করা না।</p>
+<p>Worst source: case যেগুলো সব easy দেখায় ও বানিয়ে নিচ্ছেন। Model pass করে এবং confidently brick wall-এ ship করেন।</p>
+<h2 id="change-run">প্রতিটা change-এ run</h2>
+<p>Eval-এর whole point — often run করা। Wire করুন:</p>
+<ul>
+<li><strong>A pre-merge check</strong> — কেউ prompt বা model code touch করলে suite run, pass rate meaningfully drop হলে merge block।</li>
+<li><strong>A nightly job</strong> — drift detection। একই prompt নতুন model version-এ আলাদা behave করতে পারে।</li>
+<li><strong>A one-line CLI</strong> — <code>make eval</code>। Demand-এ চিন্তা না করে invoke করতে পারা উচিত।</li>
+</ul>
+<p>Fastest project তাদের eval দিনে কয়েক ডজনবার run করে iterate করে। Slowest-দের কিছুই নেই — "test by feel"।</p>
+<h2 id="leaderboard-chasing-">Leaderboard chasing-এ সাবধান</h2>
+<p>Pass rate একটা number; এটা chase করলে পথ হারাতে পারেন। দুটো failure mode:</p>
+<ul>
+<li><strong>Eval-এ overfit।</strong> শুধু 50 case-এ tune করলে — সেগুলোতে ভালো করবেন এবং next 50-এ খারাপ। Case periodically rotate করুন। একটা fresh set hold out রাখুন যা tune করেন না।</li>
+<li><strong>Easy win hard loss mask।</strong> Pass rate 92% থেকে 94% — কিন্তু 6% যা এখনো fail সেগুলো সব high-value case। <em>কোন</em> case fail হচ্ছে দেখুন, <em>কতগুলো</em> না।</li>
+</ul>
+<h2 id="passfail-">Pass/fail-এর বাইরে</h2>
+<p>Basic suite থাকলে layer in করুন:</p>
+<ul>
+<li><strong>Per case cost।</strong> Token track করুন। নতুন prompt একই case half cost-এ pass — real win, pass rate flat থাকলেও।</li>
+<li><strong>Latency।</strong> Mean ও P95।</li>
+<li><strong>Failure clustering।</strong> Failure category-তে group। "অর্ধেক failure যখন user-এর question Spanish-এ" — "pass rate 87%" এর চেয়ে অনেক বেশি actionable insight।</li>
+</ul>
+<p>A well-instrumented eval suite আপনাকে বলে — system কাজ করে কিনা না শুধু, কোথায় ও কীভাবে করে না। এটাই steer করতে দেয়।</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">সম্পন্ন হিসেবে চিহ্নিত করুন</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="04-building-mcp-servers.html"><span class="dir">← পূর্ববর্তী</span><span class="title">MCP Server বানানো</span></a>
+          <a class="chapter-nav-next" href="06-production-readiness.html"><span class="dir">পরবর্তী →</span><span class="title">Production Readiness</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">এই পেজে</div>
+        <ul>
+            <li><a href="#একটা-eval-আসলে-কী">একটা eval আসলে কী</a></li>
+            <li><a href="#effort-এর-order-এ-scoring-strategy">Effort-এর order-এ scoring strategy</a></li>
+            <li><a href="#প্রথম-eval-বানানো">প্রথম eval বানানো</a></li>
+            <li><a href="#case-কোথা-থেকে-আসে">Case কোথা থেকে আসে</a></li>
+            <li><a href="#প্রতিটা-change-এ-run">প্রতিটা change-এ run</a></li>
+            <li><a href="#leaderboard-chasing-এ-সাবধান">Leaderboard chasing-এ সাবধান</a></li>
+            <li><a href="#pass-fail-এর-বাইরে">Pass/fail-এর বাইরে</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../../assets/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Building MCP Servers — Advanced Patterns</title>
+  <link rel="stylesheet" href="../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">Open Guide · Advanced Patterns</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">Learn Claude</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="index.html">Advanced Patterns</a>
+      <span class="sep">›</span>
+      <span class="current">Building MCP Servers</span>
+    </nav>
+    <a class="lang-toggle" href="../../bn/courses/advanced-patterns/04-building-mcp-servers.html" data-action="set-lang">বাংলায় পড়ুন</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">Course</span>
+          <a href="index.html">Advanced Patterns</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> completed</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-agent-loops.html"><span class="ch-num">01</span><span class="ch-title">Agent Loops</span></a></li>
+            <li class=""><a href="02-multi-step-workflows.html"><span class="ch-num">02</span><span class="ch-title">Multi-step Workflows</span></a></li>
+            <li class=""><a href="03-subagent-orchestration.html"><span class="ch-num">03</span><span class="ch-title">Subagent Orchestration</span></a></li>
+            <li class="active"><a href="04-building-mcp-servers.html" aria-current="page"><span class="ch-num">04</span><span class="ch-title">Building MCP Servers</span></a></li>
+            <li class=""><a href="05-evaluation-and-testing.html"><span class="ch-num">05</span><span class="ch-title">Evaluation and Testing</span></a></li>
+            <li class=""><a href="06-production-readiness.html"><span class="ch-num">06</span><span class="ch-title">Production Readiness</span></a></li>
+            <li class=""><a href="07-cost-optimization.html"><span class="ch-num">07</span><span class="ch-title">Cost Optimization</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Building MCP Servers</h1>
+<p>If the MCP server you need doesn't exist, you write it. The protocol is well-specified, the SDKs are friendly, and a useful server is usually a few hundred lines of code. Writing one is a forcing function for clean tool design — once you've built one, you understand the whole agent ecosystem better.</p>
+<h2 id="what-youre-building">What you're building</h2>
+<p>An MCP server is a small program. It speaks the MCP protocol over stdio (most common) or HTTP+SSE. It exposes:</p>
+<ul>
+<li><strong>Tools</strong> — callable functions, with schemas, that the agent invokes.</li>
+<li><strong>Resources</strong> — read-only data sources the agent can fetch by URI.</li>
+<li><strong>Prompts</strong> — optional prompt templates the agent can request.</li>
+</ul>
+<p>For most servers, tools are 90% of the value. Start there; add resources and prompts only if they fit.</p>
+<h2 id="a-minimum-server-in-python">A minimum server in Python</h2>
+<p>The Python SDK is <code>mcp</code>. A minimal stdio server:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">mcp.server</span><span class="w"> </span><span class="kn">import</span> <span class="n">Server</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mcp.server.stdio</span><span class="w"> </span><span class="kn">import</span> <span class="n">stdio_server</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mcp.types</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">t</span>
+
+<span class="n">server</span> <span class="o">=</span> <span class="n">Server</span><span class="p">(</span><span class="s2">&quot;my-server&quot;</span><span class="p">)</span>
+
+<span class="nd">@server</span><span class="o">.</span><span class="n">list_tools</span><span class="p">()</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_tools</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Tool</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">t</span><span class="o">.</span><span class="n">Tool</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;add&quot;</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Add two numbers and return the sum.&quot;</span><span class="p">,</span>
+            <span class="n">inputSchema</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">},</span>
+                    <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">},</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">],</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+    <span class="p">]</span>
+
+<span class="nd">@server</span><span class="o">.</span><span class="n">call_tool</span><span class="p">()</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">call_tool</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">arguments</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;add&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">TextContent</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">arguments</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">arguments</span><span class="p">[</span><span class="s2">&quot;b&quot;</span><span class="p">]))]</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown tool: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">stdio_server</span><span class="p">()</span> <span class="k">as</span> <span class="p">(</span><span class="n">read</span><span class="p">,</span> <span class="n">write</span><span class="p">):</span>
+        <span class="k">await</span> <span class="n">server</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">read</span><span class="p">,</span> <span class="n">write</span><span class="p">,</span> <span class="n">server</span><span class="o">.</span><span class="n">create_initialization_options</span><span class="p">())</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+    <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</code></pre></div>
+
+<p>That's a fully working MCP server. Drop the script path into a Claude Code config and it becomes available immediately.</p>
+<h2 id="tool-design-principles">Tool design principles</h2>
+<p>A useful tool follows the same rules as a good function signature:</p>
+<ul>
+<li><strong>Names and descriptions.</strong> Be unambiguous. <code>query_db</code> is fine; <code>q</code> is not. The description is what Claude reads to decide whether the tool applies — write it for the model, not for a code-review audience.</li>
+<li><strong>Tight schemas.</strong> Use <code>enum</code> to constrain values. Use <code>required</code> to lock in mandatory fields. The narrower the schema, the fewer wrong calls Claude makes.</li>
+<li><strong>Small surface.</strong> Five well-designed tools beat fifteen mediocre ones. If your server has 30 tools, agents will get confused about which to pick.</li>
+<li><strong>Idempotence where possible.</strong> Easy retries, fewer surprises.</li>
+<li><strong>Structured returns.</strong> Return JSON or compact text the model can parse. Avoid free-form paragraphs except when generating one is the <em>whole point</em>.</li>
+</ul>
+<h2 id="errors">Errors</h2>
+<p>When a tool fails, return a <em>structured error</em> not an exception trace. The model can reason over a clear error message and try something different; it can't reason over a Python stack dump.</p>
+<div class="codehilite"><pre><span></span><code><span class="k">return</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">TextContent</span><span class="p">(</span>
+    <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span><span class="p">,</span>
+    <span class="n">text</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span>
+        <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;row_not_found&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;detail&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;No row matched id=</span><span class="si">{</span><span class="n">row_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;hint&quot;</span><span class="p">:</span> <span class="s2">&quot;Use list_ids() to see valid options.&quot;</span><span class="p">,</span>
+    <span class="p">}),</span>
+<span class="p">)]</span>
+</code></pre></div>
+
+<p>The <code>hint</code> field is gold — it nudges the model toward a productive recovery without you writing a retry loop.</p>
+<h2 id="permissions-and-side-effects">Permissions and side effects</h2>
+<p>Treat MCP servers as production code. Anything with side effects (database writes, API mutations, file system changes) needs:</p>
+<ul>
+<li>A <strong>read-only mode</strong> as the default. Add writes only when explicitly opted in.</li>
+<li><strong>Confirmation hooks</strong> for destructive operations. The client (Claude Code) will surface confirmations to the user.</li>
+<li><strong>Scoped credentials.</strong> Don't give the server admin-level access "just in case." Give it the narrowest permissions that work.</li>
+</ul>
+<h2 id="distribution">Distribution</h2>
+<p>Once it works, distribute it. Options:</p>
+<ul>
+<li><strong>Local-only script.</strong> Fine for personal tooling. Path in the config, that's it.</li>
+<li><strong>npm or PyPI package.</strong> Lets others install with one command.</li>
+<li><strong>Public registry.</strong> There's a directory of MCP servers; submit yours if it's general-purpose.</li>
+</ul>
+<p>A well-designed server outlives the client it was built for, because the protocol is portable. The server you write today for Claude Code might be used in two years by something that doesn't exist yet.</p>
+<h2 id="things-to-watch">Things to watch</h2>
+<ul>
+<li><strong>Schema drift.</strong> If you change a tool's schema, agents that learned the old shape will misbehave. Version your tool names (<code>query_v2</code>) or accept the old shape for a deprecation window.</li>
+<li><strong>Long operations.</strong> A tool call that takes 30 seconds blocks the agent. For long work, return a job ID immediately and offer a <code>poll_job</code> tool to check status.</li>
+<li><strong>Streaming.</strong> Some servers expose long-running tools that stream partial results. The protocol supports it; the SDK helpers do too. Useful for tools that scan large datasets.</li>
+</ul>
+<p>The first server you write is the hardest. The fourth is fun. By then you'll see your codebase, your services, even your team's processes, as potential MCP surfaces — and you'll be right.</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">Mark as complete</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="03-subagent-orchestration.html"><span class="dir">← Previous</span><span class="title">Subagent Orchestration</span></a>
+          <a class="chapter-nav-next" href="05-evaluation-and-testing.html"><span class="dir">Next →</span><span class="title">Evaluation and Testing</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">On this page</div>
+        <ul>
+            <li><a href="#what-you-re-building">What you&#x27;re building</a></li>
+            <li><a href="#a-minimum-server-in-python">A minimum server in Python</a></li>
+            <li><a href="#tool-design-principles">Tool design principles</a></li>
+            <li><a href="#errors">Errors</a></li>
+            <li><a href="#permissions-and-side-effects">Permissions and side effects</a></li>
+            <li><a href="#distribution">Distribution</a></li>
+            <li><a href="#things-to-watch">Things to watch</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../assets/script.js"></script>
+</body>
+</html>

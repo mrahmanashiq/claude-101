@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Streaming Response — Claude API ও SDK</title>
+  <link rel="stylesheet" href="../../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">ওপেন গাইড · Claude API ও SDK</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">লার্ন ক্লড</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../../index.html">হোম</a>
+      <span class="sep">›</span>
+      <a href="index.html">Claude API ও SDK</a>
+      <span class="sep">›</span>
+      <span class="current">Streaming Response</span>
+    </nav>
+    <a class="lang-toggle" href="../../../courses/claude-api/04-streaming.html" data-action="set-lang">Read in English</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">কোর্স</span>
+          <a href="index.html">Claude API ও SDK</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> সম্পন্ন</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-getting-started.html"><span class="ch-num">01</span><span class="ch-title">API দিয়ে শুরু</span></a></li>
+            <li class=""><a href="02-messages-api-basics.html"><span class="ch-num">02</span><span class="ch-title">Messages API-এর Basic</span></a></li>
+            <li class=""><a href="03-tool-use.html"><span class="ch-num">03</span><span class="ch-title">Tool Use</span></a></li>
+            <li class="active"><a href="04-streaming.html" aria-current="page"><span class="ch-num">04</span><span class="ch-title">Streaming Response</span></a></li>
+            <li class=""><a href="05-prompt-caching.html"><span class="ch-num">05</span><span class="ch-title">Prompt Caching</span></a></li>
+            <li class=""><a href="06-extended-thinking.html"><span class="ch-num">06</span><span class="ch-title">Extended Thinking</span></a></li>
+            <li class=""><a href="07-files-pdfs-vision.html"><span class="ch-num">07</span><span class="ch-title">File, PDF ও Vision</span></a></li>
+            <li class=""><a href="08-batch-and-async.html"><span class="ch-num">08</span><span class="ch-title">Batch ও Async</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Streaming Response</h1>
+<p>Default-এ <code>messages.create(...)</code> পুরো response generate হওয়া পর্যন্ত wait করে। Short reply-এর জন্য ঠিক আছে, কিন্তু কয়েক second-এর বেশি কোনো কিছুর জন্য খারাপ — user spinner দেখে, এবং generate হওয়ার সাথে সাথে react করার কোনো সুযোগ নেই।</p>
+<p>Streaming দুটোই fix করে। Token-গুলো produce হতেই আপনি পান, live render করতে পারেন, এবং পুরোটা না লাগলে আগে cancel করতে পারেন।</p>
+<h2 id="_1">এটা চালু করা</h2>
+<p>শুধু <code>stream=True</code> pass করুন:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">with</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">stream</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">,</span>
+    <span class="n">max_tokens</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
+    <span class="n">messages</span><span class="o">=</span><span class="p">[{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;CSS নিয়ে একটা haiku লেখো।&quot;</span><span class="p">}],</span>
+<span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">stream</span><span class="o">.</span><span class="n">text_stream</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+
+<p><code>text_stream</code> শুধু text delta yield করে — UI-তে wire করা সহজ। Finer-grained access দরকার হলে (flying tool call, usage update, raw event) — <code>stream</code> নিজের উপর iterate করতে পারেন এবং typed event পাবেন।</p>
+<h2 id="event-type">Event type</h2>
+<p>Underneath API একটা series-এর typed event emit করে:</p>
+<ul>
+<li><strong><code>message_start</code></strong> — response-এর শুরু। Model ID, role, initial usage।</li>
+<li><strong><code>content_block_start</code></strong> — একটা নতুন content block-এর শুরু (text, tool_use, thinking)।</li>
+<li><strong><code>content_block_delta</code></strong> — একটা block-এর incremental chunk। Text-এর জন্য একটা ছোট string। Tool_use-এর জন্য একটা JSON fragment।</li>
+<li><strong><code>content_block_stop</code></strong> — block-এর শেষ।</li>
+<li><strong><code>message_delta</code></strong> — top-level metadata update (stop reason, final usage)।</li>
+<li><strong><code>message_stop</code></strong> — শেষ।</li>
+</ul>
+<p>Exotic কিছু না করলে নিজে এই সব handle করতে হয় না। SDK helper (<code>text_stream</code>, <code>accumulate_messages</code>, ইত্যাদি) common case cover করে।</p>
+<h2 id="common-ui-pattern">একটা common UI pattern</h2>
+<p>Chat UI-এর জন্য contract সাধারণত: text delta render করুন আসার সাথে সাথে, তারপর stream শেষ হলে finalize করুন।</p>
+<div class="codehilite"><pre><span></span><code><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">chat_handler</span><span class="p">(</span><span class="n">websocket</span><span class="p">,</span> <span class="n">prompt</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">stream</span><span class="p">(</span>
+        <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">,</span>
+        <span class="n">max_tokens</span><span class="o">=</span><span class="mi">2048</span><span class="p">,</span>
+        <span class="n">messages</span><span class="o">=</span><span class="p">[{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">prompt</span><span class="p">}],</span>
+    <span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
+        <span class="k">async</span> <span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">stream</span><span class="o">.</span><span class="n">text_stream</span><span class="p">:</span>
+            <span class="k">await</span> <span class="n">websocket</span><span class="o">.</span><span class="n">send_text</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="n">final</span> <span class="o">=</span> <span class="k">await</span> <span class="n">stream</span><span class="o">.</span><span class="n">get_final_message</span><span class="p">()</span>
+        <span class="k">await</span> <span class="n">websocket</span><span class="o">.</span><span class="n">send_json</span><span class="p">({</span><span class="s2">&quot;done&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;usage&quot;</span><span class="p">:</span> <span class="n">final</span><span class="o">.</span><span class="n">usage</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()})</span>
+</code></pre></div>
+
+<p>Streamed token user-এর view-তে incrementally আসে; final event authoritative usage ও stop_reason বহন করে।</p>
+<h2 id="cancellation">Cancellation</h2>
+<p>Stream cancellable। User navigate করে চলে গেলে বা stop চাপলে — connection drop করুন (বা <code>with</code> block-এর <code>for</code> loop থেকে break করুন)। Token যা generate হয়নি — তার জন্য bill হবে না।</p>
+<div class="codehilite"><pre><span></span><code><span class="k">with</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">stream</span><span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">stream</span><span class="o">.</span><span class="n">text_stream</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">user_aborted</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="n">write</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</code></pre></div>
+
+<p>User live output না দেখলেও stream করার একটা practical কারণ এটাই — কিছু ভুল হলে একটা clean exit।</p>
+<h2 id="tool-use-streaming">Tool use-এর সাথে streaming</h2>
+<p>Streaming ও tool use compose করে। Model একটা tool call generate করার সাথে সাথে — JSON fragment সহ <code>content_block_delta</code> event পান। SDK accumulate করে যাতে tool call finalize হলে act করতে পারেন।</p>
+<p>Agent code-এ একটা common pattern: response stream করুন, এবং একটা tool_use block finalize হলেই (message-এর বাকি অংশ আসার আগেই) — parallel-এ tool call kick off করুন। Tool call-এর পরও model হয়তো text emit করছে; কাজ শুরু করতে wait করতে হয় না।</p>
+<h2 id="stream">কখন stream করবেন না</h2>
+<p>Batch job, eval, যেকোনো non-user-facing — streaming complexity add করে কোনো benefit ছাড়া। Just non-streaming call করুন এবং response পড়ুন। Streaming UX feature, engineering feature না primarily।</p>
+<h2 id="gotcha">একটা ছোট gotcha</h2>
+<p>প্রতিটা delta একটা giant string-এ concatenate করে accidentally memory-তে response ধরে রাখবেন না — যদি না দরকার। প্রতিটা delta যেখানে possible render-then-discard করুন। Long output-এর জন্য এটা real memory বাঁচায় এবং প্রতিটা tick-এ পুরো transcript re-render এড়ায়।</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">সম্পন্ন হিসেবে চিহ্নিত করুন</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="03-tool-use.html"><span class="dir">← পূর্ববর্তী</span><span class="title">Tool Use</span></a>
+          <a class="chapter-nav-next" href="05-prompt-caching.html"><span class="dir">পরবর্তী →</span><span class="title">Prompt Caching</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">এই পেজে</div>
+        <ul>
+            <li><a href="#এটা-চালু-করা">এটা চালু করা</a></li>
+            <li><a href="#event-type">Event type</a></li>
+            <li><a href="#একটা-common-ui-pattern">একটা common UI pattern</a></li>
+            <li><a href="#cancellation">Cancellation</a></li>
+            <li><a href="#tool-use-এর-সাথে-streaming">Tool use-এর সাথে streaming</a></li>
+            <li><a href="#কখন-stream-করবেন-না">কখন stream করবেন না</a></li>
+            <li><a href="#একটা-ছোট-gotcha">একটা ছোট gotcha</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../../assets/script.js"></script>
+</body>
+</html>

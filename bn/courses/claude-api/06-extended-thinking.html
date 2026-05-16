@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Extended Thinking — Claude API ও SDK</title>
+  <link rel="stylesheet" href="../../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">ওপেন গাইড · Claude API ও SDK</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">লার্ন ক্লড</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../../index.html">হোম</a>
+      <span class="sep">›</span>
+      <a href="index.html">Claude API ও SDK</a>
+      <span class="sep">›</span>
+      <span class="current">Extended Thinking</span>
+    </nav>
+    <a class="lang-toggle" href="../../../courses/claude-api/06-extended-thinking.html" data-action="set-lang">Read in English</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">কোর্স</span>
+          <a href="index.html">Claude API ও SDK</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> সম্পন্ন</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-getting-started.html"><span class="ch-num">01</span><span class="ch-title">API দিয়ে শুরু</span></a></li>
+            <li class=""><a href="02-messages-api-basics.html"><span class="ch-num">02</span><span class="ch-title">Messages API-এর Basic</span></a></li>
+            <li class=""><a href="03-tool-use.html"><span class="ch-num">03</span><span class="ch-title">Tool Use</span></a></li>
+            <li class=""><a href="04-streaming.html"><span class="ch-num">04</span><span class="ch-title">Streaming Response</span></a></li>
+            <li class=""><a href="05-prompt-caching.html"><span class="ch-num">05</span><span class="ch-title">Prompt Caching</span></a></li>
+            <li class="active"><a href="06-extended-thinking.html" aria-current="page"><span class="ch-num">06</span><span class="ch-title">Extended Thinking</span></a></li>
+            <li class=""><a href="07-files-pdfs-vision.html"><span class="ch-num">07</span><span class="ch-title">File, PDF ও Vision</span></a></li>
+            <li class=""><a href="08-batch-and-async.html"><span class="ch-num">08</span><span class="ch-title">Batch ও Async</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Extended Thinking</h1>
+<p>Extended thinking হলো Claude-এর built-in scratchpad। Enable করলে model final answer-এ commit করার আগে একটা internal reasoning block produce করে — default-এ end user-দের কাছে invisible। কঠিন problem-এ এটা ধারাবাহিকভাবে quality improve করে। সহজ problem-এ — wasted token। পুরো game হলো কখন on করবেন জানা।</p>
+<h2 id="_1">চালু করা</h2>
+<p>Call-এ একটা parameter:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">messages</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-sonnet-4-6&quot;</span><span class="p">,</span>
+    <span class="n">max_tokens</span><span class="o">=</span><span class="mi">4096</span><span class="p">,</span>
+    <span class="n">thinking</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="s2">&quot;budget_tokens&quot;</span><span class="p">:</span> <span class="mi">2048</span><span class="p">},</span>
+    <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;এই multi-step problem solve করো...&quot;</span><span class="p">},</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<p>দুটো field:</p>
+<ul>
+<li><strong><code>type</code></strong> — <code>"enabled"</code> বা <code>"disabled"</code>। Default disabled।</li>
+<li><strong><code>budget_tokens</code></strong> — thinking block কত token consume করতে পারবে। Model কম use করতে পারে। এটা <code>max_tokens</code>-এর অংশ — <code>max_tokens</code> যথেষ্ট উঁচু set করুন যাতে thinking ও visible answer দুটোই include হয়।</li>
+</ul>
+<h2 id="_2">যা ফেরত পাবেন</h2>
+<p>Response-এর <code>content</code>-এ text-এর পাশাপাশি একটা <code>thinking</code> block থাকবে:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">resp</span><span class="o">.</span><span class="n">content</span>
+<span class="c1"># [</span>
+<span class="c1">#   ThinkingBlock(type=&#39;thinking&#39;, thinking=&#39;Let me break this down...&#39;),</span>
+<span class="c1">#   TextBlock(type=&#39;text&#39;, text=&#39;The answer is...&#39;),</span>
+<span class="c1"># ]</span>
+</code></pre></div>
+
+<p>End user-কে thinking সাধারণত render করেন না। Useful যেসব ক্ষেত্রে:</p>
+<ul>
+<li><strong>Debugging।</strong> Model কিছু ভুল করলে thinking দেখায় logic কোথায় sideways গেছে।</li>
+<li><strong>Logging।</strong> Thinking save করলে পরে hard case analyze করতে পারেন।</li>
+<li><strong>Multi-turn continuity।</strong> Conversation continue করলে — আগের turn-এর thinking pass back করতে পারেন (বা না) — নিচে cover।</li>
+</ul>
+<h2 id="_3">কখন সাহায্য করে</h2>
+<p>এই ধরনের task-এ thinking enabled থাকলে quality improve হয়:</p>
+<ul>
+<li>Multi-step arithmetic বা symbolic reasoning।</li>
+<li>Non-obvious correctness criteria-সহ code।</li>
+<li>Logical puzzle, constraint satisfaction।</li>
+<li>Trade-off analysis ("এই requirement-এ কোন approach better?")।</li>
+<li>যেখানে thinking ছাড়া model confident-but-wrong answer দিচ্ছে।</li>
+</ul>
+<p>খুব একটা সাহায্য করে না:</p>
+<ul>
+<li>Short factual lookup।</li>
+<li>Writing task যেখানে logic-এর চেয়ে flow matter করে।</li>
+<li>যে task-এ thinking ছাড়াই model nail করছে।</li>
+</ul>
+<p>A simple test: 20টা representative hard prompt pick করুন। Thinking on ও off — দুটোতে run করুন। Compare করুন। Lift real হলে — production path-এ enable করুন। না হলে — 30% cost বাঁচালেন।</p>
+<h2 id="budget-sizing">Budget sizing</h2>
+<p>বেশি budget = বেশি reasoning room, slower response, বেশি cost। Useful range:</p>
+<ul>
+<li><strong>~1,024 token পর্যন্ত</strong> — light reasoning। কিছুই extra cost না, marginally সাহায্য।</li>
+<li><strong>2,048 থেকে 4,096</strong> — meaningful reasoning। Hard task-এর জন্য good default।</li>
+<li><strong>8,192+</strong> — heavy reasoning। Multi-step proof, complex analysis। শুধু hardest tail-এর জন্য।</li>
+</ul>
+<p>Task অনুযায়ী একবার set করুন, churn করবেন না। Model budget-এর চেয়ে কম use করতে পারে — তাই generous হওয়া mostly safe।</p>
+<h2 id="tool-interaction">Tool-এর সাথে interaction</h2>
+<p>Thinking tool use-এর পাশাপাশি কাজ করে। Model thinks, কোন tool call করবে decide করে, call করে, result পায়, continue করে। প্রতিটা "think" segment একটা fresh reasoning step।</p>
+<p>Response-এ thinking block tool_use block-এর সাথে interleaved দেখতে পারেন। Agent loop basic tool-use loop-এর মতোই — শুধু কোন block পরবর্তী turn-এ preserve করবেন aware থাকুন।</p>
+<h2 id="thinking-back-pass">Thinking back pass করা</h2>
+<p>Multi-turn conversation-এ API পরবর্তী call-এ assistant-এর previous thinking block accept করবে। Back পাঠাবেন কিনা — আপনার goal-এর উপর depend করে:</p>
+<ul>
+<li><strong>পাঠান।</strong> Model যেখানে ছেড়েছিল continue করতে পারে। Better continuity। বেশি expensive (সেই token input হিসেবে count করে)।</li>
+<li><strong>Drop করুন।</strong> Cheaper, কিন্তু model fresh শুরু করে। Unrelated next question-এর জন্য fine।</li>
+</ul>
+<p>Default — thinking block যে turn produce করেছে সেই turn-এ scope করে রাখুন; reason থাকলেই back পাঠান।</p>
+<h2 id="philosophical-note">একটা philosophical note</h2>
+<p>Thinking মানুষের চিন্তার মতো truly hidden reasoning না। এটা শুধু <em>আরও output token, official answer-এর আগে generate করা</em>। Model-এর ভুল path-এ commit করে নিজেকে correct করার বেশি room আছে — এটাই exact benefit। Scratchpad-এর মতো treat করুন: useful, magic না।</p>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">সম্পন্ন হিসেবে চিহ্নিত করুন</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="05-prompt-caching.html"><span class="dir">← পূর্ববর্তী</span><span class="title">Prompt Caching</span></a>
+          <a class="chapter-nav-next" href="07-files-pdfs-vision.html"><span class="dir">পরবর্তী →</span><span class="title">File, PDF ও Vision</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">এই পেজে</div>
+        <ul>
+            <li><a href="#চালু-করা">চালু করা</a></li>
+            <li><a href="#যা-ফেরত-পাবেন">যা ফেরত পাবেন</a></li>
+            <li><a href="#কখন-সাহায্য-করে">কখন সাহায্য করে</a></li>
+            <li><a href="#budget-sizing">Budget sizing</a></li>
+            <li><a href="#tool-এর-সাথে-interaction">Tool-এর সাথে interaction</a></li>
+            <li><a href="#thinking-back-pass-করা">Thinking back pass করা</a></li>
+            <li><a href="#একটা-philosophical-note">একটা philosophical note</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../../assets/script.js"></script>
+</body>
+</html>

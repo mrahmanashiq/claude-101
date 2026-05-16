@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Context Windows Explained — Fundamentals</title>
+  <link rel="stylesheet" href="../../assets/styles.css">
+</head>
+<body>
+  <div class="promo-strip">Open Guide · Fundamentals</div>
+  <header class="site-header">
+    <button class="nav-toggle" aria-label="Toggle sidebar" data-action="toggle-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <a class="brand" href="../../index.html">
+      <span class="brand-mark">LC</span>
+      <span class="brand-text">Learn Claude</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../../index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="index.html">Fundamentals</a>
+      <span class="sep">›</span>
+      <span class="current">Context Windows Explained</span>
+    </nav>
+    <a class="lang-toggle" href="../../bn/courses/fundamentals/04-context-windows.html" data-action="set-lang">বাংলায় পড়ুন</a>
+    <button class="theme-toggle" aria-label="Toggle theme" data-action="toggle-theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-inner">
+        <div class="sidebar-title">
+          <span class="sidebar-eyebrow">Course</span>
+          <a href="index.html">Fundamentals</a>
+        </div>
+        <div class="sidebar-progress" aria-label="Course progress">
+          <div class="sidebar-progress-text"><span class="progress-done">0</span>/<span class="progress-total">0</span> completed</div>
+          <div class="progress-track"><span class="progress-fill"></span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <ol>
+            <li class=""><a href="01-what-is-claude.html"><span class="ch-num">01</span><span class="ch-title">What is Claude?</span></a></li>
+            <li class=""><a href="02-models-opus-sonnet-haiku.html"><span class="ch-num">02</span><span class="ch-title">Models: Opus, Sonnet, Haiku</span></a></li>
+            <li class=""><a href="03-how-to-talk-to-claude.html"><span class="ch-num">03</span><span class="ch-title">How to Talk to Claude</span></a></li>
+            <li class="active"><a href="04-context-windows.html" aria-current="page"><span class="ch-num">04</span><span class="ch-title">Context Windows Explained</span></a></li>
+            <li class=""><a href="05-system-prompts-vs-user-prompts.html"><span class="ch-num">05</span><span class="ch-title">System Prompts vs User Prompts</span></a></li>
+            <li class=""><a href="06-reasoning-and-thinking.html"><span class="ch-num">06</span><span class="ch-title">Reasoning, Thinking, and Effort</span></a></li>
+            <li class=""><a href="07-common-pitfalls.html"><span class="ch-num">07</span><span class="ch-title">Common Pitfalls and How to Avoid Them</span></a></li>
+          </ol>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="article-wrap">
+      <article class="article">
+        <h1>Context Windows Explained</h1>
+<p>The <strong>context window</strong> is how much text Claude can consider in a single call. It's measured in tokens — roughly four characters of English text per token, give or take. Recent Claude models support context windows in the hundreds of thousands of tokens, with some extended-context variants going to a million.</p>
+<p>That's a lot. But "a lot" doesn't mean "infinite," and treating context like infinite is one of the most common rookie mistakes.</p>
+<h2 id="what-counts-as-context">What counts as context</h2>
+<p>Everything you send to the model on a given call is context:</p>
+<ul>
+<li>The <strong>system prompt</strong> (high-level instructions about role, tone, rules)</li>
+<li>The <strong>conversation history</strong> (previous turns, both user and assistant)</li>
+<li>Any <strong>attached documents</strong> (pasted files, PDFs, images)</li>
+<li><strong>Tool definitions</strong> and <strong>tool results</strong> from earlier in the conversation</li>
+</ul>
+<p>All of these compete for the same budget. If you have a 200k-token window and 180k of it is the conversation so far, you have 20k left for the next exchange and the response.</p>
+<h2 id="lost-in-the-middle">"Lost in the middle"</h2>
+<p>Even with a large window, models attend most strongly to the beginning and end of the context. Information buried in the middle of a long prompt is more likely to be missed or de-emphasized. Two practical consequences:</p>
+<ul>
+<li><strong>Put the most important instructions at the very start or very end</strong> of the prompt.</li>
+<li><strong>For long documents, don't bury the question.</strong> State the task first, then the document, then restate the task at the end.</li>
+</ul>
+<h2 id="you-pay-for-every-token-every-time">You pay for every token, every time</h2>
+<p>If you're using the API, you're billed per input token on every call. A long-running chat that has accumulated a 100k-token history will charge you for that history <em>on every new user turn</em>. This is where prompt caching becomes a major lever (covered later in the API course) — it lets you reuse a long stable prefix without re-paying full price.</p>
+<h2 id="when-to-compact">When to compact</h2>
+<p>Once a conversation gets long, three options:</p>
+<ul>
+<li><strong>Summarize and continue.</strong> Replace the older turns with a short summary, keep recent turns verbatim. Loses fidelity but stays cheap.</li>
+<li><strong>Trim by relevance.</strong> Drop turns that aren't useful for the current question. Best if you can detect which turns are relevant.</li>
+<li><strong>Start fresh.</strong> Sometimes the cleanest answer. Begin a new conversation with the relevant facts in the system prompt.</li>
+</ul>
+<p>Claude Code does some of this automatically when its own context fills up, but in your own applications you'll need to manage it yourself.</p>
+<h2 id="a-mental-model">A mental model</h2>
+<p>Think of context as a workbench, not a memory. The model only sees what's on the bench right now. Anything off the bench may as well not exist. Your job as the builder is to keep the right things on the bench for the current task — no more, no less.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A long context window is a capability, not a strategy. Just because you <em>can</em> dump 500k tokens in does not mean you <em>should</em>. The model's quality is best when the context is focused on what's actually needed.</p>
+</div>
+        <div class="chapter-complete">
+          <button class="chapter-complete-btn" type="button" data-action="toggle-chapter-complete" aria-pressed="false">
+            <svg class="icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path class="check-mark" d="M8 12l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="label">Mark as complete</span>
+          </button>
+        </div>
+        <nav class="chapter-nav">
+          <a class="chapter-nav-prev" href="03-how-to-talk-to-claude.html"><span class="dir">← Previous</span><span class="title">How to Talk to Claude</span></a>
+          <a class="chapter-nav-next" href="05-system-prompts-vs-user-prompts.html"><span class="dir">Next →</span><span class="title">System Prompts vs User Prompts</span></a>
+        </nav>
+      </article>
+    </main>
+
+    <aside class="toc" data-toc>
+      <div class="toc-inner">
+        <div class="toc-label">On this page</div>
+        <ul>
+            <li><a href="#what-counts-as-context">What counts as context</a></li>
+            <li><a href="#lost-in-the-middle">&quot;Lost in the middle&quot;</a></li>
+            <li><a href="#you-pay-for-every-token-every-time">You pay for every token, every time</a></li>
+            <li><a href="#when-to-compact">When to compact</a></li>
+            <li><a href="#a-mental-model">A mental model</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sidebar-backdrop" data-action="close-sidebar"></div>
+  <script src="../../assets/script.js"></script>
+</body>
+</html>
