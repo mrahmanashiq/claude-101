@@ -1,0 +1,29 @@
+# Files that should NOT be uploaded to Cloudflare Workers Assets.
+# Uses .gitignore-style patterns.
+
+# VCS + meta
+.git/
+.gitignore
+.assetsignore
+
+# Source markdown (the built HTML is what's served)
+_md/
+
+# Build tooling
+build/
+__pycache__/
+*.py
+*.pyc
+
+# Docs / readme
+README.md
+
+# Wrangler config itself
+wrangler.jsonc
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
